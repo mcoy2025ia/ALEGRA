@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alegra PYME — Propuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06090a;
+  --panel:#101815;
+  --panel-2:#0d1512;
+  --line:rgba(150,196,184,.14);
+  --line-strong:rgba(150,196,184,.28);
+  --text:#e9f3ee;
+  --text-dim:#8fa79e;
+  --text-faint:#5b716a;
+  --teal:#1be3b8;
+  --teal-soft:#0fae8d;
+  --amber:#ffb454;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:64px 64px;
+  opacity:.35;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}
+.bg-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(600px 400px at 12% 8%, rgba(27,227,184,.10), transparent 60%),
+    radial-gradient(500px 380px at 88% 92%, rgba(255,180,84,.06), transparent 60%);
+}
+header{
+  position:relative;z-index:1;
+  display:flex;align-items:center;gap:12px;
+  padding:18px 28px;
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(10px);
+}
+.brand{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.02em;}
+.brand b{color:var(--teal);}
+.status{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;color:var(--text-dim);
+  padding:5px 10px;border:1px solid var(--line-strong);border-radius:20px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(27,227,184,.6);animation:pulse 2s infinite;}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(27,227,184,.55);}
+  70%{box-shadow:0 0 0 7px rgba(27,227,184,0);}
+  100%{box-shadow:0 0 0 0 rgba(27,227,184,0);}
+}
+main{
+  position:relative;z-index:1;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:64px 24px 48px;
+  text-align:center;
+}
+.eyebrow{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--text-faint);text-transform:uppercase;margin-bottom:16px;
+}
+h1{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(28px,4.5vw,44px);
+  line-height:1.15;
+  max-width:820px;
+  margin-bottom:14px;
+}
+h1 em{color:var(--teal);font-style:normal;}
+.lede{
+  max-width:620px;
+  color:var(--text-dim);
+  font-size:15.5px;
+  line-height:1.6;
+  margin-bottom:52px;
+}
+.cards{
+  width:100%;
+  max-width:920px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:22px;
+}
+@media (max-width:720px){
+  .cards{grid-template-columns:1fr;}
+}
+.card{
+  position:relative;
+  text-align:left;
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:28px 26px;
+  display:flex;
+  flex-direction:column;
+  transition:border-color .2s ease, transform .2s ease;
+}
+.card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+.card-tag{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;
+  color:var(--teal);text-transform:uppercase;margin-bottom:10px;
+}
+.card h2{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:21px;
+  margin-bottom:10px;
+}
+.card p{
+  color:var(--text-dim);
+  font-size:13.5px;
+  line-height:1.55;
+  margin-bottom:22px;
+  flex:1;
+}
+.card-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{
+  font-family:var(--font-display);font-weight:600;font-size:13px;
+  padding:11px 18px;border-radius:9px;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:var(--teal);color:#03110d;}
+.btn-primary:hover{background:var(--teal-soft);}
+.btn-ghost{border:1px solid var(--line-strong);color:var(--text);}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);}
+footer{
+  position:relative;z-index:1;
+  text-align:center;
+  padding:20px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--text-faint);
+  border-top:1px solid var(--line);
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<header>
+  <div class="brand"><b>Alegra</b> · PYME</div>
+  <div class="status"><span class="dot"></span>Propuestas</div>
+</header>
+
+<main>
+  <div class="eyebrow">Alegra PYME · Propuestas AI-First</div>
+  <h1>Dos sistemas, un mismo <em>loop de crecimiento</em>.</h1>
+  <p class="lede">Elige una propuesta para ver la ruta de desarrollo interactiva o descargar el PDF ejecutivo.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag">Growth Strategist Pymes</div>
+      <h2>Growth Autopilot</h2>
+      <p>Detecta oportunidades y riesgos del negocio, recomienda la siguiente mejor acción y la ejecuta con control humano.</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="https://alegra-growth-autopilot.vercel.app/" target="_blank" rel="noopener">Ver página</a>
+        <a class="btn btn-ghost" href="https://alegra-growth-autopilot.vercel.app/ALEGRA_PYME-Growth_Autopilot.pdf" target="_blank" rel="noopener">Ver PDF</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-tag">Lifecycle &amp; Automation Marketing Leader</div>
+      <h2>Lifecycle Autopilot</h2>
+      <p>Orquesta la comunicación con el cliente durante todo su ciclo de vida: onboarding, activación, retención y reactivación.</p>
+      <div class="card-actions">
+        <a class="btn btn-primary" href="https://alegra-lifecycle-autopilot.vercel.app/" target="_blank" rel="noopener">Ver página</a>
+        <a class="btn btn-ghost" href="https://alegra-lifecycle-autopilot.vercel.app/ALEGRA_PYME-Lifecycle_Autopilot.pdf" target="_blank" rel="noopener">Ver PDF</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>ALEGRA_PYME · Propuestas</footer>
+</body>
+</html>
