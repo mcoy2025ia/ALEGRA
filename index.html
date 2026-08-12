@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alegra PYME — Propuestas</title>
+<title>Manuel Alberto Coy Benavides — Propuestas Alegra PYME</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -60,6 +60,10 @@ header{
 }
 .brand{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.02em;}
 .brand b{color:var(--teal);}
+.header-sep{width:1px;height:16px;background:var(--line-strong);}
+.candidate{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);}
+.candidate b{color:var(--text);font-weight:600;}
+@media (max-width:640px){.header-sep,.candidate{display:none;}}
 .status{
   margin-left:auto;display:flex;align-items:center;gap:8px;
   font-family:var(--font-mono);font-size:11px;color:var(--text-dim);
@@ -98,8 +102,16 @@ h1 em{color:var(--teal);font-style:normal;}
   color:var(--text-dim);
   font-size:15.5px;
   line-height:1.6;
+  margin-bottom:14px;
+}
+.byline{
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  color:var(--text-faint);
+  letter-spacing:.02em;
   margin-bottom:52px;
 }
+.byline strong{color:var(--teal-soft);font-weight:600;}
 .cards{
   width:100%;
   max-width:920px;
@@ -181,6 +193,8 @@ footer{
 
 <header>
   <div class="brand"><b>Alegra</b> · PYME</div>
+  <div class="header-sep"></div>
+  <div class="candidate">Candidato: <b>Manuel Alberto Coy Benavides</b></div>
   <div class="status"><span class="dot"></span>Propuestas</div>
 </header>
 
@@ -188,6 +202,7 @@ footer{
   <div class="eyebrow">Alegra PYME · Propuestas AI-First</div>
   <h1>Dos sistemas, un mismo <em>loop de crecimiento</em>.</h1>
   <p class="lede">Elige una propuesta para ver la ruta de desarrollo interactiva o descargar el PDF ejecutivo.</p>
+  <p class="byline">Preparado por <strong>Manuel Alberto Coy Benavides</strong> para los procesos de selección de Alegra.</p>
 
   <div class="cards">
     <div class="card">
@@ -224,6 +239,6 @@ footer{
   </div>
 </main>
 
-<footer>ALEGRA_PYME · Propuestas</footer>
+<footer>Manuel Alberto Coy Benavides · ALEGRA_PYME · Propuestas</footer>
 </body>
 </html>
