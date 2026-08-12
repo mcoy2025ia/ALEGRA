@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Growth Autopilot — Ruta de Desarrollo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --bg:#06090a;
+  --bg-soft:#0b1210;
+  --panel:#101815;
+  --panel-2:#0d1512;
+  --line:rgba(150,196,184,.14);
+  --line-strong:rgba(150,196,184,.28);
+  --text:#e9f3ee;
+  --text-dim:#8fa79e;
+  --text-faint:#5b716a;
+  --teal:#1be3b8;
+  --teal-soft:#0fae8d;
+  --teal-deep:#08594a;
+  --amber:#ffb454;
+  --red:#ff6b6b;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--teal);color:#03110d;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:var(--teal-soft);}
+
+/* ---------- background texture ---------- */
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:64px 64px;
+  opacity:.35;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}
+.bg-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(600px 400px at 12% 8%, rgba(27,227,184,.10), transparent 60%),
+    radial-gradient(500px 380px at 88% 92%, rgba(255,180,84,.06), transparent 60%);
+}
+
+/* ---------- shell ---------- */
+.shell{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;}
+
+/* top HUD bar */
+.hud{
+  display:flex;align-items:center;gap:18px;
+  padding:10px 22px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,16,14,.9), rgba(10,16,14,.55));
+  backdrop-filter:blur(10px);
+  flex-shrink:0;
+}
+.hud-brand{display:flex;align-items:center;gap:10px;}
+.hud-logo{height:44px;width:auto;border-radius:6px;display:block;}
+.hud-name{font-family:var(--font-display);font-weight:600;font-size:14.5px;letter-spacing:.02em;}
+.hud-name b{color:var(--teal);font-weight:600;}
+.hud-sep{width:1px;height:18px;background:var(--line-strong);}
+.hud-mono{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:.02em;}
+.hud-status{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;color:var(--text-dim);
+  padding:5px 10px;border:1px solid var(--line-strong);border-radius:20px;
+}
+.hud-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(27,227,184,.6);animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{
+  0%{box-shadow:0 0 0 0 rgba(27,227,184,.55);}
+  70%{box-shadow:0 0 0 7px rgba(27,227,184,0);}
+  100%{box-shadow:0 0 0 0 rgba(27,227,184,0);}
+}
+.hud-level{display:none;}
+@media (min-width:720px){.hud-level{display:flex;}}
+
+/* main layout: rail + content */
+.main{flex:1;display:flex;min-height:0;}
+
+/* nav rail */
+.rail{
+  width:230px;flex-shrink:0;
+  border-right:1px solid var(--line);
+  padding:22px 12px;
+  display:flex;flex-direction:column;gap:2px;
+  overflow-y:auto;
+}
+@media (max-width:880px){
+  .rail{width:64px;padding:16px 6px;}
+  .rail .tab-label{display:none;}
+  .rail .tab-btn{justify-content:center;}
+}
+.rail-eyebrow{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  color:var(--text-faint);text-transform:uppercase;
+  padding:6px 12px 10px;
+}
+@media (max-width:880px){.rail-eyebrow{display:none;}}
+.tab-btn{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 12px;border-radius:10px;
+  background:transparent;border:1px solid transparent;
+  color:var(--text-dim);cursor:pointer;text-align:left;
+  font-family:var(--font-body);font-size:13.5px;font-weight:500;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+  position:relative;
+}
+.tab-btn:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.tab-btn .idx{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);
+  width:18px;flex-shrink:0;
+}
+.tab-btn.active{
+  color:var(--text);background:rgba(27,227,184,.08);
+  border-color:rgba(27,227,184,.25);
+}
+.tab-btn.active .idx{color:var(--teal);}
+.tab-btn.active::before{
+  content:"";position:absolute;left:-13px;top:50%;transform:translateY(-50%);
+  width:3px;height:60%;background:var(--teal);border-radius:3px;
+  box-shadow:0 0 10px rgba(27,227,184,.7);
+}
+@media (max-width:880px){.tab-btn.active::before{display:none;}}
+
+.rail-foot{margin-top:auto;padding:14px 12px 4px;font-family:var(--font-mono);font-size:10px;color:var(--text-faint);line-height:1.6;}
+@media (max-width:880px){.rail-foot{display:none;}}
+
+/* content area */
+.content{flex:1;position:relative;min-width:0;}
+.tab-panel{
+  position:absolute;inset:0;
+  overflow-y:auto;overflow-x:hidden;
+  padding:44px clamp(20px,4vw,64px) 90px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(10px);
+  transition:opacity .35s ease, transform .4s ease;
+}
+.tab-panel.active{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s cubic-bezier(.2,.7,.2,1), transform .55s cubic-bezier(.2,.7,.2,1);}
+.reveal.shown{opacity:1;transform:translateY(0);}
+
+/* ---------- typography helpers ---------- */
+.eyebrow{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--teal);display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:16px;height:1px;background:var(--teal);}
+h1.page-title{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(28px,3.6vw,44px);
+  letter-spacing:-.01em;line-height:1.08;margin-bottom:14px;max-width:820px;
+}
+h1.page-title em{color:var(--teal);font-style:normal;}
+.lede{font-size:15.5px;color:var(--text-dim);max-width:640px;line-height:1.7;margin-bottom:36px;}
+h2.section-title{
+  font-family:var(--font-display);font-weight:600;font-size:21px;letter-spacing:-.01em;
+  margin:52px 0 18px;display:flex;align-items:baseline;gap:10px;
+}
+h2.section-title .n{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);font-weight:400;}
+h2.section-title:first-of-type{margin-top:0;}
+h3.card-title{font-family:var(--font-display);font-weight:600;font-size:15.5px;margin-bottom:8px;}
+p.desc{color:var(--text-dim);font-size:13.6px;line-height:1.65;}
+
+/* ---------- cards / grid ---------- */
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;
+  transition:border-color .25s ease, transform .25s ease;
+}
+.card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+.card::after{
+  content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent, rgba(27,227,184,.5), transparent);
+  opacity:0;transition:opacity .3s ease;
+}
+.card:hover::after{opacity:1;}
+
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;
+  color:var(--teal);background:rgba(27,227,184,.09);border:1px solid rgba(27,227,184,.25);
+  padding:3px 8px;border-radius:20px;
+}
+.tag.amber{color:var(--amber);background:rgba(255,180,84,.09);border-color:rgba(255,180,84,.28);}
+.tag.muted{color:var(--text-dim);background:rgba(255,255,255,.04);border-color:var(--line-strong);}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{
+  font-family:var(--font-mono);font-size:11px;color:var(--text-dim);
+  background:rgba(255,255,255,.03);border:1px solid var(--line);
+  padding:5px 10px;border-radius:8px;
+}
+
+/* quote block */
+.quote{
+  border-left:2px solid var(--teal);padding:4px 0 4px 20px;margin:22px 0;
+  font-family:var(--font-display);font-weight:500;font-size:17px;line-height:1.55;
+  color:var(--text);max-width:680px;
+}
+.quote span{display:block;margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-faint);font-weight:400;}
+
+/* code / mono block */
+.code{
+  font-family:var(--font-mono);font-size:12px;line-height:1.7;color:#a7ebd8;
+  background:#081210;border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;overflow-x:auto;white-space:pre;
+}
+.code .k{color:var(--amber);}
+.code .c{color:var(--text-faint);}
+
+/* mermaid wrapper */
+.diagram{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px;overflow-x:auto;margin:18px 0 8px;
+}
+.diagram .mermaid{display:flex;justify-content:center;min-width:560px;}
+.diagram-cap{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);margin-top:10px;letter-spacing:.03em;}
+
+/* checklist */
+.checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;}
+@media (max-width:760px){.checklist{grid-template-columns:1fr;}}
+.check-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-dim);line-height:1.5;padding:6px 0;border-bottom:1px dashed var(--line);}
+.check-item .box{width:14px;height:14px;flex-shrink:0;margin-top:2px;border:1px solid var(--teal-soft);border-radius:4px;position:relative;}
+.check-item .box::after{content:"";position:absolute;inset:2.5px;background:var(--teal);border-radius:2px;transform:scale(0);transition:transform .2s;}
+.check-item:hover .box::after{transform:scale(1);}
+
+/* number stat */
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat .num{font-family:var(--font-display);font-size:30px;font-weight:600;color:var(--teal);}
+.stat .lab{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);letter-spacing:.04em;text-transform:uppercase;}
+
+/* timeline / phases */
+.phase-row{display:flex;gap:16px;align-items:flex-start;position:relative;padding:0 0 30px 0;}
+.phase-row .rail-line{position:absolute;left:17px;top:36px;bottom:0;width:1px;background:var(--line-strong);}
+.phase-row:last-child .rail-line{display:none;}
+.phase-dot{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:12px;color:var(--teal);
+  border:1px solid var(--teal-soft);background:rgba(27,227,184,.07);z-index:1;
+}
+.phase-body{flex:1;padding-top:4px;}
+.phase-body h4{font-family:var(--font-display);font-size:15.5px;font-weight:600;margin-bottom:5px;}
+
+/* HITL levels */
+.levels{display:flex;flex-direction:column;gap:10px;}
+.level{
+  display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel-2);
+}
+.level .lv-num{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);width:56px;flex-shrink:0;}
+.level.is-mvp{border-color:rgba(27,227,184,.4);background:rgba(27,227,184,.06);}
+.level.is-mvp .lv-num{color:var(--teal);}
+.level p{font-size:13px;color:var(--text-dim);}
+.level.is-mvp p{color:var(--text);}
+.level .mvp-badge{margin-left:auto;flex-shrink:0;}
+
+/* owner cards */
+.owner-card{border-radius:16px;padding:24px;position:relative;overflow:hidden;border:1px solid var(--line);background:var(--panel);}
+.owner-card .owner-tag{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);letter-spacing:.1em;text-transform:uppercase;}
+.owner-card h3{font-family:var(--font-display);font-size:19px;font-weight:600;margin:4px 0 14px;}
+.owner-card ol{padding-left:18px;color:var(--text-dim);font-size:12.8px;line-height:1.85;}
+.owner-card .paths{margin-top:14px;display:flex;flex-direction:column;gap:5px;}
+.owner-card .paths .chip{width:fit-content;}
+.owner-card .deliverable{
+  margin-top:16px;padding:10px 12px;border-radius:8px;border:1px dashed var(--line-strong);
+  font-family:var(--font-mono);font-size:11px;color:var(--teal);
+}
+
+/* footer nav arrows */
+.panel-nav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:24px;border-top:1px solid var(--line);}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;cursor:pointer;background:none;border:none;color:var(--text-dim);
+  font-family:var(--font-body);font-size:13px;transition:color .2s;
+}
+.nav-btn:hover{color:var(--teal);}
+.nav-btn .lab{font-family:var(--font-mono);font-size:10px;color:var(--text-faint);display:block;text-transform:uppercase;letter-spacing:.06em;}
+
+/* ---------- HERO / overview specific ---------- */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;margin-bottom:10px;}
+@media (max-width:980px){.hero{grid-template-columns:1fr;}}
+.hero-loop{display:flex;justify-content:center;}
+.loop-node{fill:var(--panel-2);stroke:var(--line-strong);stroke-width:1;}
+.loop-label{font-family:var(--font-mono);font-size:9.5px;fill:var(--text-dim);letter-spacing:.03em;}
+.loop-path{fill:none;stroke:var(--line-strong);stroke-width:1;stroke-dasharray:4 5;}
+.loop-node.active{stroke:var(--teal);}
+
+.promise-box{display:flex;flex-direction:column;gap:14px;margin-top:26px;}
+.bubble{
+  max-width:420px;padding:12px 16px;border-radius:14px;font-size:13.3px;line-height:1.55;
+  border:1px solid var(--line);background:var(--panel-2);
+}
+.bubble.you{align-self:flex-start;border-color:rgba(27,227,184,.3);}
+.bubble.system{align-self:flex-start;margin-left:26px;background:rgba(27,227,184,.05);border-color:rgba(27,227,184,.25);}
+.bubble .who{font-family:var(--font-mono);font-size:9.5px;color:var(--text-faint);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
+
+.usecase-tier{margin-bottom:26px;}
+.usecase-tier .tier-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.usecase-tier .tier-head .tag{font-size:11px;}
+.usecase-tier .tier-head .tline{flex:1;height:1px;background:var(--line);}
+
+/* pipeline steps (vertical slice) */
+.pipe{display:flex;flex-direction:column;}
+.pipe-step{
+  display:grid;grid-template-columns:44px 1fr;gap:16px;padding:14px 0;
+  border-bottom:1px solid var(--line);position:relative;
+}
+.pipe-step:last-child{border-bottom:none;}
+.pipe-step .pn{
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--line-strong);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);
+  font-size:12px;color:var(--teal);background:var(--panel-2);
+}
+.pipe-step h4{font-family:var(--font-body);font-weight:600;font-size:13.8px;margin-bottom:3px;}
+.pipe-step p{font-size:12.6px;color:var(--text-dim);}
+
+/* scoring bars */
+.score-formula{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+.score-bar-row{display:flex;align-items:center;gap:12px;}
+.score-bar-row .label{width:190px;flex-shrink:0;font-size:12.5px;color:var(--text-dim);font-family:var(--font-mono);}
+.score-bar-track{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.05);overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal-deep),var(--teal));}
+.score-bar-row .pct{width:44px;text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--teal);}
+
+/* demo scenes */
+.scene{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);}
+.scene:last-child{border-bottom:none;}
+.scene .sc-n{font-family:var(--font-mono);color:var(--text-faint);font-size:11px;width:80px;flex-shrink:0;padding-top:3px;}
+.scene h4{font-family:var(--font-display);font-size:14.5px;margin-bottom:4px;}
+.scene p{font-size:12.8px;color:var(--text-dim);line-height:1.55;}
+
+/* table */
+table.spec-table{width:100%;border-collapse:collapse;font-size:12.6px;}
+table.spec-table th{
+  text-align:left;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-faint);padding:10px 12px;border-bottom:1px solid var(--line-strong);
+}
+table.spec-table td{padding:11px 12px;border-bottom:1px solid var(--line);color:var(--text-dim);}
+table.spec-table tr:hover td{color:var(--text);}
+table.spec-table td:first-child, table.spec-table th:first-child{color:var(--teal);font-family:var(--font-mono);}
+
+/* mobile top-tab fallback header inside content */
+.mobile-title{display:none;font-family:var(--font-mono);font-size:11px;color:var(--text-faint);margin-bottom:6px;}
+
+@media (max-width:880px){
+  .grid-3, .grid-4 {grid-template-columns:1fr 1fr;}
+}
+@media (max-width:560px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+  .hud-mono{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="shell">
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-brand">
+      <img src="data:image/png;base64,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" class="hud-logo" alt="Alegra">
+      <div class="hud-name">Growth <b>Autopilot</b></div>
+    </div>
+    <div class="hud-sep"></div>
+    <div class="hud-mono">DEV_SPEC.md · MASTER SPEC V1</div>
+    <div class="hud-status hud-level">
+      <span class="hud-dot"></span> HITL NIVEL 2 · MVP
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- NAV RAIL -->
+    <nav class="rail" id="rail">
+      <div class="rail-eyebrow">Navegación</div>
+      <button class="tab-btn active" data-tab="overview"><span class="idx">00</span><span class="tab-label">Visión &amp; Problema</span></button>
+      <button class="tab-btn" data-tab="architecture"><span class="idx">01</span><span class="tab-label">Arquitectura</span></button>
+      <button class="tab-btn" data-tab="flow"><span class="idx">02</span><span class="tab-label">Flujo Growth</span></button>
+      <button class="tab-btn" data-tab="data"><span class="idx">03</span><span class="tab-label">Datos &amp; Scoring</span></button>
+      <button class="tab-btn" data-tab="agents"><span class="idx">04</span><span class="tab-label">Agentes &amp; Guardrails</span></button>
+      <button class="tab-btn" data-tab="roadmap"><span class="idx">05</span><span class="tab-label">Roadmap &amp; Equipo</span></button>
+      <button class="tab-btn" data-tab="metrics"><span class="idx">06</span><span class="tab-label">Métricas &amp; Éxito</span></button>
+      <div class="rail-foot">SIGNAL → DECISION<br>→ ACTION → OUTCOME<br>→ LEARNING</div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ===================== 00 OVERVIEW ===================== -->
+      <section class="tab-panel active" id="panel-overview">
+        <div class="eyebrow reveal">00 · Visión del producto</div>
+        <div class="hero">
+          <div class="reveal">
+            <h1 class="page-title">La PYME no debería tener que <em>volverse experta</em><br>para crecer bien.</h1>
+            <p class="lede">Growth Autopilot es un sistema AI-First que detecta oportunidades y riesgos en el negocio, entiende el contexto del cliente, recomienda la siguiente mejor acción, la ejecuta con control humano, y mide si realmente generó valor incremental.</p>
+            <div class="chip-row">
+              <span class="chip">Detect</span><span class="chip">Understand</span><span class="chip">Recommend</span><span class="chip">Act</span><span class="chip">Measure</span><span class="chip">Learn</span>
+            </div>
+          </div>
+          <div class="hero-loop reveal">
+            <svg viewBox="0 0 320 320" width="100%" height="320" style="max-width:340px;">
+              <path class="loop-path" d="M160,30 L272.6,95 L272.6,225 L160,290 L47.4,225 L47.4,95 Z" />
+              <circle r="4.5" fill="#1be3b8">
+                <animateMotion dur="9s" repeatCount="indefinite"
+                  path="M160,30 L272.6,95 L272.6,225 L160,290 L47.4,225 L47.4,95 Z" />
+              </circle>
+              <g font-family="JetBrains Mono">
+                <circle class="loop-node" cx="160" cy="30" r="30"/>
+                <text class="loop-label" x="160" y="34" text-anchor="middle">DETECT</text>
+                <circle class="loop-node" cx="272.6" cy="95" r="30"/>
+                <text class="loop-label" x="272.6" y="99" text-anchor="middle">UNDERST.</text>
+                <circle class="loop-node" cx="272.6" cy="225" r="30"/>
+                <text class="loop-label" x="272.6" y="229" text-anchor="middle">RECOMM.</text>
+                <circle class="loop-node" cx="160" cy="290" r="30"/>
+                <text class="loop-label" x="160" y="294" text-anchor="middle">ACT</text>
+                <circle class="loop-node" cx="47.4" cy="225" r="30"/>
+                <text class="loop-label" x="47.4" y="229" text-anchor="middle">MEASURE</text>
+                <circle class="loop-node" cx="47.4" cy="95" r="30"/>
+                <text class="loop-label" x="47.4" y="99" text-anchor="middle">LEARN</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§1</span> El problema</h2>
+        <p class="desc reveal" style="max-width:680px;margin-bottom:16px;">Las PYMES tienen información fragmentada y reaccionan tarde: caída de ventas, clientes inactivos, cartera vencida, señales de churn, leads sin seguimiento, comunicaciones genéricas. Los sistemas tradicionales registran eventos — no deciden. Growth Autopilot cierra ese ciclo.</p>
+        <div class="chip-row reveal">
+          <span class="chip">Caída de ventas</span><span class="chip">Clientes inactivos</span><span class="chip">Cartera vencida</span>
+          <span class="chip">Riesgo de caja</span><span class="chip">Baja rotación</span><span class="chip">Propensión de recompra</span>
+          <span class="chip">Upsell / cross-sell</span><span class="chip">Señales de churn</span><span class="chip">Leads sin seguimiento</span>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§2</span> La promesa central</h2>
+        <div class="promise-box reveal">
+          <div class="bubble system"><div class="who">Growth Autopilot</div>Detectamos 23 clientes con alta probabilidad de recompra durante los próximos 7 días. Una campaña personalizada podría generar conversiones adicionales.</div>
+          <div class="bubble system" style="margin-left:26px;"><div class="who">Growth Autopilot</div>Preparé tres variantes de mensaje y seleccioné el canal recomendado. ¿Quieres activar el experimento?</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§3</span> ICP &amp; Job To Be Done</h2>
+        <div class="grid grid-2 reveal">
+          <div class="card">
+            <h3 class="card-title">Empresa objetivo</h3>
+            <p class="desc">PYME con ventas recurrentes, histórico transaccional, clientes identificables, frecuencia de compra medible, capacidad de comunicación digital y suficiente volumen para aprender patrones.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Usuario principal</h3>
+            <p class="desc">Dueño, administrador, gerente comercial o responsable de crecimiento — sin tiempo para revisar múltiples dashboards antes de actuar.</p>
+          </div>
+        </div>
+        <div class="quote reveal">"Cuando tengo cientos o miles de clientes y no sé a quién contactar primero, quiero que el sistema identifique automáticamente las oportunidades con mayor probabilidad de generar ventas."
+          <span>JOB TO BE DONE · USUARIO PRINCIPAL</span>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§4</span> Principios de producto</h2>
+        <div class="grid grid-3 reveal">
+          <div class="card"><span class="tag">Principio 01</span><h3 class="card-title" style="margin-top:10px;">Zero Work</h3><p class="desc">Reducir configuración, filtros, dashboards, formularios y análisis repetitivo al mínimo posible.</p></div>
+          <div class="card"><span class="tag">Principio 02</span><h3 class="card-title" style="margin-top:10px;">Explain Before Act</h3><p class="desc">Toda recomendación indica qué detectó, por qué importa, evidencia, impacto estimado, confianza y riesgo.</p></div>
+          <div class="card"><span class="tag">Principio 03</span><h3 class="card-title" style="margin-top:10px;">Human Control</h3><p class="desc">Cuatro niveles de autonomía, del "IA recomienda" al "IA opera autónomamente". El MVP vive en Nivel 2.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§5</span> Casos de uso priorizados</h2>
+        <div class="usecase-tier reveal">
+          <div class="tier-head"><span class="tag">P0 — MVP</span><div class="tline"></div></div>
+          <div class="grid grid-3">
+            <div class="card"><h3 class="card-title">UC-01 Reactivación</h3><p class="desc">Clientes dormidos con valor potencial → comunicación recomendada.</p></div>
+            <div class="card"><h3 class="card-title">UC-02 Lead follow-up</h3><p class="desc">Leads sin actividad → seguimiento priorizado.</p></div>
+            <div class="card"><h3 class="card-title">UC-03 Next Best Action</h3><p class="desc">La acción comercial más adecuada por cliente.</p></div>
+            <div class="card"><h3 class="card-title">UC-04 Message Generation</h3><p class="desc">Mensajes contextualizados y estructurados.</p></div>
+            <div class="card"><h3 class="card-title">UC-05 Human Approval</h3><p class="desc">Aprobación humana antes de ejecutar.</p></div>
+            <div class="card"><h3 class="card-title">UC-06 Experiment Tracking</h3><p class="desc">Tratamiento/control y medición de resultado.</p></div>
+          </div>
+        </div>
+        <div class="usecase-tier reveal">
+          <div class="tier-head"><span class="tag amber">P1</span><div class="tline"></div></div>
+          <div class="chip-row"><span class="chip">Churn Risk</span><span class="chip">Upsell / Cross-sell</span><span class="chip">Collection Opportunity</span><span class="chip">Onboarding Activation</span></div>
+        </div>
+        <div class="usecase-tier reveal">
+          <div class="tier-head"><span class="tag muted">P2</span><div class="tline"></div></div>
+          <div class="chip-row"><span class="chip">Cashflow Risk</span><span class="chip">Inventory Opportunity</span><span class="chip">Referral</span><span class="chip">Pricing Opportunity</span><span class="chip">Autonomous Campaign Optimization</span></div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <div></div>
+          <button class="nav-btn" data-goto="architecture"><span class="lab">Siguiente</span>Arquitectura del sistema →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 01 ARCHITECTURE ===================== -->
+      <section class="tab-panel" id="panel-architecture">
+        <div class="eyebrow reveal">01 · Arquitectura técnica</div>
+        <h1 class="page-title reveal">Ocho capas, <em>un solo</em> flujo de decisión.</h1>
+        <p class="lede reveal">De la experiencia al dato, pasando por el orquestador, los jueces y la capa de acción — cada capa desacoplada, con adapters/mocks para todo lo que aún no tiene contrato validado con Alegra.</p>
+
+        <h2 class="section-title reveal" style="margin-top:0;"><span class="n">§5.5</span> Panorama general — cómo se conecta todo</h2>
+        <p class="desc reveal" style="margin-bottom:10px;max-width:720px;">De los problemas detectados en la PYME hasta el cliente que aprueba una acción, pasando por los agentes, el registro de herramientas MCP y los sistemas externos mockeados.</p>
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph TD
+  subgraph PROB["Problemas detectados en la PYME"]
+    P1["Caída de ventas"]
+    P2["Clientes inactivos / dormidos"]
+    P3["Cartera vencida"]
+    P4["Riesgo de caja"]
+    P5["Leads sin seguimiento"]
+  end
+
+  PROB --> EVT["Eventos de negocio<br/>purchase · invoice · lead · inactivity"]
+  EVT --> GW["API Gateway<br/>Auth · Tenant Context"]
+
+  subgraph CLI["Cliente — Next.js Web App"]
+    FEED["Opportunity Feed"]
+    INBOX["Approval Inbox"]
+  end
+
+  GW <--> CLI
+
+  GW --> ORCH
+
+  subgraph AG["Growth Orchestrator + Agentes"]
+    ORCH["Growth Orchestrator<br/>Routing · Policies · HITL"]
+    SCORE["Scoring Service"]
+    NBA["NBA Engine"]
+    COMM["Communication Agent"]
+    JUDGE["Judge Agent"]
+    ORCH --> SCORE --> NBA --> COMM
+    COMM --> JUDGE
+    JUDGE -- pass --> ORCH
+    JUDGE -- fail / regenerate --> COMM
+  end
+
+  ORCH --> HITL{{"Human Approval<br/>Nivel 2"}}
+  HITL -- approve --> MCP
+  HITL -- reject --> ORCH
+  INBOX -.decide.-> HITL
+
+  subgraph MCP["MCP / Tool Registry"]
+    T1["get_customer_360"]
+    T2["prepare_message"]
+    T3["send_message_mock"]
+    T4["record_conversion"]
+  end
+
+  subgraph EXT["Adapters — sistemas externos (mock)"]
+    ALEGRA["Mock Alegra Adapter"]
+    MSGP["Messaging Provider"]
+    CRM["CRM"]
+  end
+
+  MCP --> ALEGRA
+  MCP --> MSGP
+  MCP --> CRM
+
+  MCP --> DATA[("Data Layer<br/>Customer 360 · Events · Scores · Experiments")]
+  DATA --> FEED
+  DATA --> OBS["Observability<br/>Traces · Costos · Evals"]
+  OBS -. aprendizaje .-> SCORE
+          </pre>
+          <div class="diagram-cap">FIG. 00 — Panorama general: problemas → cliente → agentes → MCP → sistemas externos → datos</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§6a</span> Capas, en detalle</h2>
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph TD
+  A["Experience Layer<br/>Next.js · Approval Inbox · Opportunity Feed"] --> B["API Gateway<br/>REST · Event API · Auth · Rate Limit · Tenant Context"]
+  B --> C["Growth Orchestrator<br/>Routing · Planning · Policies · HITL · Execution State"]
+  C --> D1["Scoring Service"]
+  C --> D2["NBA Engine"]
+  C --> D3["GenAI Agent"]
+  C --> D4["Experiment Engine"]
+  D1 --> E["Judges / Guardrails / Evaluation<br/>Schema · Safety · Grounding · Brand · Policy · Quality"]
+  D2 --> E
+  D3 --> E
+  D4 --> E
+  E --> F["Action Layer<br/>Messaging · CRM · Tasks · Notifications · Mock Alegra Tools"]
+  F --> G["Data Layer<br/>Customer 360 · Events · Scores · Actions · Experiments"]
+  G --> H["Observability Layer<br/>Traces · Metrics · Costs · Evals"]
+          </pre>
+          <div class="diagram-cap">FIG. 01 — Arquitectura lógica de capas</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§6</span> Stack de referencia</h2>
+        <p class="desc reveal" style="margin-bottom:16px;">Puede sustituirse sin alterar los contratos funcionales — lo que importa son las abstracciones, no el proveedor.</p>
+        <div class="grid grid-4 reveal">
+          <div class="card"><span class="tag">Frontend</span><p class="desc" style="margin-top:10px;">Next.js · TypeScript · React · UI accesible y responsive.</p></div>
+          <div class="card"><span class="tag">Backend</span><p class="desc" style="margin-top:10px;">Python · FastAPI · Pydantic · async jobs cuando aplica.</p></div>
+          <div class="card"><span class="tag">Agentic</span><p class="desc" style="margin-top:10px;">LangGraph o equivalente · tool calling · graph state explícito · checkpoints · HITL.</p></div>
+          <div class="card"><span class="tag">Data</span><p class="desc" style="margin-top:10px;">PostgreSQL · pgvector intercambiable · Redis opcional · object storage opcional.</p></div>
+          <div class="card"><span class="tag">ML / Scoring</span><p class="desc" style="margin-top:10px;">Heurísticas, RFM y reglas primero. Modelo supervisado simple, opcional. Sin complejidad prematura.</p></div>
+          <div class="card"><span class="tag">Observabilidad</span><p class="desc" style="margin-top:10px;">OpenTelemetry · logs estructurados · correlation / tenant / workflow / experiment id.</p></div>
+          <div class="card"><span class="tag">Infra</span><p class="desc" style="margin-top:10px;">Docker + Compose en local. Después: contenedores + Postgres administrado + secrets manager + CI/CD.</p></div>
+          <div class="card"><span class="tag">LLM Provider</span><div class="code" style="margin-top:10px;font-size:11px;padding:10px 12px;"><span class="k">class</span> LLMProvider:
+  <span class="k">async def</span> generate(...) -> LLMResponse</div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§7</span> Multitenancy</h2>
+        <div class="card reveal" style="border-color:rgba(255,180,84,.35);">
+          <span class="tag amber">Regla dura</span>
+          <p class="desc" style="margin-top:10px;">Ninguna consulta de datos de negocio puede ejecutarse sin <b style="color:var(--text)">tenant context</b>. Todo registro de negocio debe tener <code style="font-family:var(--font-mono);color:var(--teal);">tenant_id</code>.</p>
+          <div class="chip-row" style="margin-top:12px;">
+            <span class="chip">customers</span><span class="chip">leads</span><span class="chip">invoices</span><span class="chip">transactions</span><span class="chip">events</span><span class="chip">scores</span><span class="chip">opportunities</span><span class="chip">recommendations</span><span class="chip">actions</span><span class="chip">experiments</span><span class="chip">messages</span><span class="chip">approvals</span><span class="chip">agent_runs</span>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§8</span> Seguridad obligatoria</h2>
+        <div class="checklist reveal">
+          <div class="check-item"><span class="box"></span>Tenant isolation</div>
+          <div class="check-item"><span class="box"></span>RBAC mínimo</div>
+          <div class="check-item"><span class="box"></span>Audit log</div>
+          <div class="check-item"><span class="box"></span>Secrets fuera del repo</div>
+          <div class="check-item"><span class="box"></span>PII masking en logs</div>
+          <div class="check-item"><span class="box"></span>Input / output validation</div>
+          <div class="check-item"><span class="box"></span>Rate limiting</div>
+          <div class="check-item"><span class="box"></span>Idempotency</div>
+          <div class="check-item"><span class="box"></span>Duplicate action prevention</div>
+          <div class="check-item"><span class="box"></span>Prompt injection awareness</div>
+          <div class="check-item"><span class="box"></span>Tool allowlist</div>
+          <div class="check-item"><span class="box"></span>Timeout · retry limits · circuit breaker</div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="overview"><span class="lab">Anterior</span>← Visión &amp; Problema</button>
+          <button class="nav-btn" data-goto="flow"><span class="lab">Siguiente</span>Flujo Growth →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 02 FLOW ===================== -->
+      <section class="tab-panel" id="panel-flow">
+        <div class="eyebrow reveal">02 · El flujo end-to-end</div>
+        <h1 class="page-title reveal">Del dato sintético a la <em>conversión medida</em>.</h1>
+        <p class="lede reveal">El primer vertical slice debe demostrar el ciclo completo, sin integración externa real — solo así se justifica agregar más agentes o funcionalidades.</p>
+
+        <div class="diagram reveal">
+          <pre class="mermaid">
+stateDiagram-v2
+  [*] --> DETECTED
+  DETECTED --> CONTEXT_LOADED
+  CONTEXT_LOADED --> ACTION_SELECTED
+  ACTION_SELECTED --> CONTENT_GENERATED
+  CONTENT_GENERATED --> JUDGED
+  JUDGED --> WAITING_APPROVAL: pass
+  JUDGED --> CONTENT_GENERATED: fail · regenerate
+  JUDGED --> FAILED: max retries
+  WAITING_APPROVAL --> APPROVED
+  WAITING_APPROVAL --> FAILED: reject
+  APPROVED --> EXECUTING
+  EXECUTING --> EXECUTED
+  EXECUTED --> MEASURING
+  MEASURING --> COMPLETED
+  COMPLETED --> [*]
+  FAILED --> [*]
+          </pre>
+          <div class="diagram-cap">FIG. 02 — Estados del orquestador (Growth Orchestrator)</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§9</span> Caso inicial: reactivación de clientes</h2>
+        <p class="desc reveal" style="margin-bottom:10px;max-width:680px;">Clientes que compraron antes, llevan un periodo anormal sin comprar, tienen valor suficiente, propensión razonable a reactivarse y canal de contacto válido.</p>
+        <div class="pipe reveal">
+          <div class="pipe-step"><div class="pn">01</div><div><h4>Seed synthetic customers</h4><p>1,000 clientes, 12 meses de compras, patrones mixtos.</p></div></div>
+          <div class="pipe-step"><div class="pn">02</div><div><h4>Calculate RFM</h4><p>Recency · Frequency · Monetary por cliente.</p></div></div>
+          <div class="pipe-step"><div class="pn">03</div><div><h4>Detect dormant customers</h4><p>Dormancy dinámica basada en frecuencia esperada.</p></div></div>
+          <div class="pipe-step"><div class="pn">04</div><div><h4>Score reactivation</h4><p>Value · Intent/Propensity · Risk.</p></div></div>
+          <div class="pipe-step"><div class="pn">05</div><div><h4>Create opportunity</h4><p>Priority · expected value · confidence · reason codes.</p></div></div>
+          <div class="pipe-step"><div class="pn">06</div><div><h4>Select Next Best Action</h4><p>Reglas + scores. Sin LLM para la decisión matemática.</p></div></div>
+          <div class="pipe-step"><div class="pn">07</div><div><h4>Generate message</h4><p>Communication Agent — salida estructurada.</p></div></div>
+          <div class="pipe-step"><div class="pn">08</div><div><h4>Judge message</h4><p>Schema · policy · grounding · quality · risk.</p></div></div>
+          <div class="pipe-step"><div class="pn">09</div><div><h4>Create approval request</h4><p>Nivel 2 — IA prepara, humano aprueba.</p></div></div>
+          <div class="pipe-step"><div class="pn">10</div><div><h4>User approves from UI</h4><p>Approve · Edit · Reject.</p></div></div>
+          <div class="pipe-step"><div class="pn">11</div><div><h4>Execute mock send</h4><p>ConsoleMessagingProvider — sin envío real aún.</p></div></div>
+          <div class="pipe-step"><div class="pn">12</div><div><h4>Record outcome</h4><p>Evento de conversión, si ocurre.</p></div></div>
+          <div class="pipe-step"><div class="pn">13</div><div><h4>Show experiment result</h4><p>Treatment vs. control, uplift, revenue incremental.</p></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§10</span> Contratos de API (MVP)</h2>
+        <table class="spec-table reveal">
+          <tr><th>Endpoint</th><th>Descripción</th></tr>
+          <tr><td>GET /opportunities</td><td>Lista por tenant_id, status, type, limit.</td></tr>
+          <tr><td>GET /opportunities/{id}</td><td>Opportunity, customer summary, scores, recommendation, evidence.</td></tr>
+          <tr><td>POST /opportunities/{id}/prepare</td><td>Crea el workflow de decisión.</td></tr>
+          <tr><td>POST /approvals/{id}/approve</td><td>Ejecuta el workflow aprobado.</td></tr>
+          <tr><td>POST /approvals/{id}/reject</td><td>Registra el rechazo.</td></tr>
+          <tr><td>GET /workflows/{id}</td><td>Estado actual y traza resumida.</td></tr>
+          <tr><td>GET /experiments/{id}/results</td><td>Control, tratamiento, uplift, tamaño de muestra.</td></tr>
+        </table>
+
+        <h2 class="section-title reveal"><span class="n">§11</span> Eventos del dominio</h2>
+        <div class="chip-row reveal">
+          <span class="chip">customer.created</span><span class="chip">lead.created</span><span class="chip">lead.contacted</span><span class="chip">purchase.completed</span>
+          <span class="chip">invoice.created</span><span class="chip">invoice.paid</span><span class="chip">invoice.overdue</span><span class="chip">customer.inactive_detected</span>
+          <span class="chip">opportunity.created</span><span class="chip">recommendation.created</span><span class="chip">approval.requested</span><span class="chip">approval.approved</span>
+          <span class="chip">approval.rejected</span><span class="chip">message.prepared</span><span class="chip">message.sent</span><span class="chip">message.delivered</span>
+          <span class="chip">message.clicked</span><span class="chip">conversion.completed</span><span class="chip">experiment.assigned</span><span class="chip">experiment.completed</span>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="architecture"><span class="lab">Anterior</span>← Arquitectura</button>
+          <button class="nav-btn" data-goto="data"><span class="lab">Siguiente</span>Datos &amp; Scoring →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 03 DATA ===================== -->
+      <section class="tab-panel" id="panel-data">
+        <div class="eyebrow reveal">03 · Datos &amp; Scoring</div>
+        <h1 class="page-title reveal">El Customer 360 no es un dashboard.<br>Es un <em>objeto operacional</em>.</h1>
+        <p class="lede reveal">Resume exactamente el contexto necesario para decidir — nada más. Tres scores independientes alimentan la detección de oportunidades.</p>
+
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="code">{
+  <span class="k">"customer_id"</span>: <span class="c">"..."</span>,
+  <span class="k">"profile"</span>: {},
+  <span class="k">"commercial"</span>: {
+    <span class="k">"revenue_total"</span>: 0,
+    <span class="k">"avg_ticket"</span>: 0,
+    <span class="k">"purchase_count"</span>: 0,
+    <span class="k">"last_purchase_at"</span>: null
+  },
+  <span class="k">"behavior"</span>: {},
+  <span class="k">"financial"</span>: {},
+  <span class="k">"scores"</span>: {
+    <span class="k">"reactivation"</span>: 0.0,
+    <span class="k">"churn"</span>: 0.0,
+    <span class="k">"cltv"</span>: 0.0
+  },
+  <span class="k">"state"</span>: <span class="c">"..."</span>,
+  <span class="k">"recent_events"</span>: [],
+  <span class="k">"active_opportunities"</span>: []
+}</div>
+          <div class="diagram" style="margin:0;">
+            <pre class="mermaid">
+stateDiagram-v2
+  [*] --> UNKNOWN
+  UNKNOWN --> NEW
+  NEW --> ACTIVATING
+  ACTIVATING --> ACTIVE
+  ACTIVE --> HIGH_VALUE
+  ACTIVE --> AT_RISK
+  ACTIVE --> DORMANT: sin compra > umbral
+  DORMANT --> REACTIVATION_CANDIDATE: score >= umbral
+  REACTIVATION_CANDIDATE --> REACTIVATED: mensaje + conversión
+  AT_RISK --> CHURNED
+  DORMANT --> CHURNED
+            </pre>
+            <div class="diagram-cap">FIG. 03 — Máquina de estados del cliente</div>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§12</span> Tres scores, no uno</h2>
+        <div class="grid grid-3 reveal">
+          <div class="card"><span class="tag">12.1</span><h3 class="card-title" style="margin-top:10px;">Value Score</h3><p class="desc">¿Cuánto vale potencialmente este cliente? revenue_total · avg_ticket · purchase_count · frequency · margin proxy.</p></div>
+          <div class="card"><span class="tag">12.2</span><h3 class="card-title" style="margin-top:10px;">Intent / Propensity</h3><p class="desc">¿Qué tan probable es que responda o compre? recency · frequency · seasonality · prior response · channel engagement.</p></div>
+          <div class="card"><span class="tag">12.3</span><h3 class="card-title" style="margin-top:10px;">Risk Score</h3><p class="desc">¿Qué tan probable es que se pierda? inactividad anormal · frecuencia decreciente · fricción · pagos fallidos.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§13</span> Reactivation Score — V0</h2>
+        <p class="desc reveal">Primera versión determinística. Los pesos son <b style="color:var(--amber)">supuestos iniciales</b>, no verdad de negocio — deben vivir en configuración.</p>
+        <div class="score-formula reveal">
+          <div class="score-bar-row"><div class="label">value_norm</div><div class="score-bar-track"><div class="score-bar-fill" style="width:35%;"></div></div><div class="pct">0.35</div></div>
+          <div class="score-bar-row"><div class="label">abnormal_inactivity</div><div class="score-bar-track"><div class="score-bar-fill" style="width:30%;"></div></div><div class="pct">0.30</div></div>
+          <div class="score-bar-row"><div class="label">frequency_norm</div><div class="score-bar-track"><div class="score-bar-fill" style="width:20%;"></div></div><div class="pct">0.20</div></div>
+          <div class="score-bar-row"><div class="label">prior_repeat_probability</div><div class="score-bar-track"><div class="score-bar-fill" style="width:15%;"></div></div><div class="pct">0.15</div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§14</span> Dormancy dinámica</h2>
+        <div class="grid grid-2 reveal">
+          <div class="card">
+            <p class="desc">No usar <code style="color:var(--amber);font-family:var(--font-mono);">days_since_purchase &gt; 30</code> para todos. Se calcula contra la frecuencia esperada de cada cliente.</p>
+            <div class="code" style="margin-top:12px;">expected_frequency = median_days_between_purchases
+ratio = days_since_last_purchase / expected_frequency</div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Umbrales configurables</h3>
+            <div class="chip-row" style="margin-top:8px;">
+              <span class="chip">ratio ≥ 1.5 → warning</span>
+              <span class="chip">ratio ≥ 2.0 → dormant</span>
+            </div>
+            <p class="desc" style="margin-top:12px;">Configurables por tenant / segmento — nunca hardcodeados.</p>
+          </div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="flow"><span class="lab">Anterior</span>← Flujo Growth</button>
+          <button class="nav-btn" data-goto="agents"><span class="lab">Siguiente</span>Agentes &amp; Guardrails →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 04 AGENTS ===================== -->
+      <section class="tab-panel" id="panel-agents">
+        <div class="eyebrow reveal">04 · Agentes &amp; Guardrails</div>
+        <h1 class="page-title reveal">No se crean agentes<br>por <em>estética arquitectónica</em>.</h1>
+        <p class="lede reveal">Tres agentes con responsabilidad clara. El LLM explica, redacta y resume — no decide matemáticamente cuál oportunidad priorizar.</p>
+
+        <div class="grid grid-3 reveal">
+          <div class="card"><span class="tag">Agente A</span><h3 class="card-title" style="margin-top:10px;">Growth Orchestrator</h3><p class="desc">Recibe la oportunidad, recupera contexto, aplica política, selecciona workflow, coordina herramientas, gestiona aprobación y registra el resultado.</p></div>
+          <div class="card"><span class="tag">Agente B</span><h3 class="card-title" style="margin-top:10px;">Communication Agent</h3><p class="desc">Genera variantes de comunicación, respeta contexto, personaliza y produce salida estructurada — nunca inventa descuentos, fechas o deuda.</p></div>
+          <div class="card"><span class="tag">Agente C</span><h3 class="card-title" style="margin-top:10px;">Judge Agent</h3><p class="desc">Evalúa el output. No ejecuta negocio — solo decide si algo puede avanzar.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§15</span> Judge pipeline</h2>
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph LR
+  A["Generated Output"] --> B["Schema Validator"]
+  B --> C["Deterministic Policy Checks"]
+  C --> D["Grounding Judge"]
+  D --> E["Communication Quality Judge"]
+  E --> F["Risk Judge"]
+  F --> G["Final Decision"]
+          </pre>
+          <div class="diagram-cap">FIG. 04 — Ningún LLM único como juez de todo</div>
+        </div>
+
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="card">
+            <h3 class="card-title">Dimensiones del juicio</h3>
+            <div class="chip-row" style="margin-top:10px;">
+              <span class="chip">relevance</span><span class="chip">grounding</span><span class="chip">clarity</span><span class="chip">brand_fit</span>
+              <span class="chip">actionability</span><span class="chip">personalization</span><span class="chip">policy_compliance</span><span class="chip">risk</span>
+            </div>
+            <p class="desc" style="margin-top:14px;">Si <code style="font-family:var(--font-mono);color:var(--amber);">schema_valid = false</code>, <code style="font-family:var(--font-mono);color:var(--amber);">policy_compliance</code> o <code style="font-family:var(--font-mono);color:var(--amber);">grounding</code> caen bajo el umbral → <b style="color:var(--red);">DO NOT EXECUTE</b>.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Restricciones del Communication Agent</h3>
+            <div class="checklist" style="grid-template-columns:1fr;margin-top:8px;">
+              <div class="check-item"><span class="box"></span>No inventar descuentos, productos ni fechas</div>
+              <div class="check-item"><span class="box"></span>No inventar deuda ni afirmaciones financieras</div>
+              <div class="check-item"><span class="box"></span>No usar PII innecesaria</div>
+              <div class="check-item"><span class="box"></span>No prometer resultados</div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§16</span> Human-in-the-Loop</h2>
+        <div class="levels reveal">
+          <div class="level"><div class="lv-num">NIVEL 1</div><p>La IA recomienda.</p></div>
+          <div class="level"><div class="lv-num">NIVEL 2</div><p>La IA prepara y el usuario aprueba.</p><span class="tag mvp-badge">MVP</span></div>
+          <div class="level"><div class="lv-num">NIVEL 3</div><p>La IA ejecuta dentro de límites definidos.</p></div>
+          <div class="level"><div class="lv-num">NIVEL 4</div><p>La IA opera de forma autónoma.</p></div>
+        </div>
+        <style>.level:nth-child(2){}</style>
+
+        <h2 class="section-title reveal"><span class="n">§17</span> Model Router / Tiering</h2>
+        <table class="spec-table reveal">
+          <tr><th>Tier</th><th>Uso</th></tr>
+          <tr><td>Tier 0 — Sin LLM</td><td>Reglas, cálculos, scoring, filtros, deduplicación, validaciones determinísticas.</td></tr>
+          <tr><td>Tier 1 — Modelo pequeño</td><td>Clasificación simple, extracción, rewriting, resúmenes cortos.</td></tr>
+          <tr><td>Tier 2 — Modelo general</td><td>Comunicación personalizada, explicación, razonamiento moderado.</td></tr>
+          <tr><td>Tier 3 — Razonamiento avanzado</td><td>Casos ambiguos, planificación compleja, debugging, evaluación de alto riesgo.</td></tr>
+        </table>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="data"><span class="lab">Anterior</span>← Datos &amp; Scoring</button>
+          <button class="nav-btn" data-goto="roadmap"><span class="lab">Siguiente</span>Roadmap &amp; Equipo →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 05 ROADMAP ===================== -->
+      <section class="tab-panel" id="panel-roadmap">
+        <div class="eyebrow reveal">05 · Roadmap &amp; división de trabajo</div>
+        <h1 class="page-title reveal">Seis fases. <em>Un vertical slice</em> antes de todo lo demás.</h1>
+        <p class="lede reveal">Si el primer flujo de punta a punta no funciona, no se agregan más agentes ni funcionalidades.</p>
+
+        <h2 class="section-title reveal"><span class="n">§18</span> Fases</h2>
+        <div class="reveal">
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">0</div><div class="phase-body"><h4>Foundation</h4><p class="desc">Monorepo, Docker, Postgres, migrations, shared schemas, event model, generador sintético, CI.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">1</div><div class="phase-body"><h4>Intelligence</h4><p class="desc">Customer 360, RFM, dormancy, reactivation score, opportunity detector, state machine.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">2</div><div class="phase-body"><h4>Decision</h4><p class="desc">NBA engine, policy router, workflow graph, model router, provider abstraction.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">3</div><div class="phase-body"><h4>Agentic</h4><p class="desc">Communication agent, judge pipeline, HITL, tool registry, mock execution.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">4</div><div class="phase-body"><h4>Growth Measurement</h4><p class="desc">Experiment engine, control/treatment, outcomes, uplift, valor incremental.</p></div></div>
+          <div class="phase-row"><div class="phase-dot">5</div><div class="phase-body"><h4>Experience</h4><p class="desc">Opportunity feed, approval inbox, experiment view, traces, demo narrative.</p></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§19</span> División Claude / Codex / Antigravity</h2>
+        <p class="desc reveal" style="margin-bottom:16px;">División operativa, no dependiente de capacidades exclusivas de cada herramienta.</p>
+        <div class="grid grid-3 reveal">
+          <div class="owner-card">
+            <div class="owner-tag">Ownership</div>
+            <h3>Claude</h3>
+            <p class="desc" style="margin-bottom:10px;">Product · Agentic Reasoning · Evals</p>
+            <ol>
+              <li>Refinar domain rules</li>
+              <li>Diseñar prompts</li>
+              <li>Communication Agent</li>
+              <li>Judge pipeline</li>
+              <li>Workflow states</li>
+              <li>Guardrails</li>
+              <li>Evaluation datasets</li>
+              <li>Red-team cases</li>
+            </ol>
+            <div class="paths">
+              <span class="chip">/docs</span><span class="chip">/prompts</span><span class="chip">/evals</span>
+              <span class="chip">apps/api/app/agents</span><span class="chip">apps/api/app/judges</span>
+            </div>
+            <div class="deliverable">→ Agent contracts + prompt specs + 50 eval cases</div>
+          </div>
+          <div class="owner-card">
+            <div class="owner-tag">Ownership</div>
+            <h3>Codex</h3>
+            <p class="desc" style="margin-bottom:10px;">Backend · Data · Tests</p>
+            <ol>
+              <li>FastAPI</li>
+              <li>PostgreSQL &amp; migrations</li>
+              <li>Event model</li>
+              <li>Synthetic generator</li>
+              <li>Customer 360</li>
+              <li>Scoring</li>
+              <li>Opportunity detector</li>
+              <li>NBA engine · experiments · tests · CI</li>
+            </ol>
+            <div class="paths">
+              <span class="chip">apps/api/app/models</span><span class="chip">apps/api/app/services</span><span class="chip">infra</span><span class="chip">tests</span>
+            </div>
+            <div class="deliverable">→ Seed → score → opportunity API</div>
+          </div>
+          <div class="owner-card">
+            <div class="owner-tag">Ownership</div>
+            <h3>Antigravity</h3>
+            <p class="desc" style="margin-bottom:10px;">Frontend · Integration · E2E</p>
+            <ol>
+              <li>Next.js app</li>
+              <li>Opportunity Feed</li>
+              <li>Opportunity Detail</li>
+              <li>Approval Inbox</li>
+              <li>Experiment Results</li>
+              <li>Workflow Trace</li>
+              <li>API client · E2E · demo environment</li>
+            </ol>
+            <div class="paths">
+              <span class="chip">apps/web</span><span class="chip">packages/contracts</span><span class="chip">e2e</span><span class="chip">demo</span>
+            </div>
+            <div class="deliverable">→ UI navegable con fixtures y contratos reales</div>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§20</span> Plan de PRs</h2>
+        <table class="spec-table reveal">
+          <tr><th>PR</th><th>Alcance</th></tr>
+          <tr><td>001</td><td>Foundation — repo, containers, database, migrations, healthcheck, CI.</td></tr>
+          <tr><td>002</td><td>Synthetic Data — generador, historial de compras, seed, fixtures.</td></tr>
+          <tr><td>003</td><td>Customer 360 — métricas, contexto, API.</td></tr>
+          <tr><td>004</td><td>State Machine + Scoring — transiciones, RFM, dormancy, reactivation score.</td></tr>
+          <tr><td>005</td><td>Opportunity Engine — detector, ranking, API.</td></tr>
+          <tr><td>006</td><td>NBA Engine — reglas, reason codes, acción recomendada.</td></tr>
+          <tr><td>007</td><td>LLM Provider + Communication — abstracción, prompts, salida estructurada, tests.</td></tr>
+          <tr><td>008</td><td>Judges + Guardrails — schema, policy checks, judge service, eval fixtures.</td></tr>
+          <tr><td>009</td><td>Orchestrator — grafo, persistencia, retry, budget, tool registry.</td></tr>
+          <tr><td>010</td><td>HITL — approval API, transiciones, frontend inbox.</td></tr>
+          <tr><td>011</td><td>Mock Execution — messaging adapter, idempotency, audit log.</td></tr>
+          <tr><td>012</td><td>Experimentation — assignment, outcome, uplift.</td></tr>
+          <tr><td>013</td><td>Frontend — feed, detail, approvals, experiments.</td></tr>
+          <tr><td>014</td><td>Observability — traces, costos, workflow view.</td></tr>
+          <tr><td>015</td><td>Demo Hardening — seed scenario, E2E, README, demo script.</td></tr>
+        </table>
+
+        <h2 class="section-title reveal"><span class="n">§21</span> Comandos objetivo</h2>
+        <div class="code reveal">make setup   <span class="c"># instala dependencias</span>
+make dev     <span class="c"># levanta el entorno local</span>
+make seed    <span class="c"># genera datos sintéticos reproducibles</span>
+make test    <span class="c"># unit + integration</span>
+make eval    <span class="c"># AI evals</span>
+make lint
+make demo    <span class="c"># corre el guion de demo</span></div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="agents"><span class="lab">Anterior</span>← Agentes &amp; Guardrails</button>
+          <button class="nav-btn" data-goto="metrics"><span class="lab">Siguiente</span>Métricas &amp; Éxito →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 06 METRICS ===================== -->
+      <section class="tab-panel" id="panel-metrics">
+        <div class="eyebrow reveal">06 · Métricas &amp; criterio de éxito</div>
+        <h1 class="page-title reveal">No es tener agentes.<br>Es cerrar <em>Signal → Decision → Action → Outcome → Learning</em>.</h1>
+
+        <div class="grid grid-3 reveal">
+          <div class="card"><div class="stat"><div class="num">N★</div><div class="lab">North Star MVP</div></div><p class="desc" style="margin-top:10px;">Incremental Value Actions Completed — una acción cuenta cuando se detecta, se ejecuta y existe un outcome observable.</p></div>
+          <div class="card"><div class="stat"><div class="num">50</div><div class="lab">Eval cases mínimos</div></div><p class="desc" style="margin-top:10px;">Personalización correcta, contexto insuficiente, datos en conflicto, oferta inválida, claim inseguro, alucinación, canal incorrecto.</p></div>
+          <div class="card"><div class="stat"><div class="num">1,000</div><div class="lab">Clientes sintéticos</div></div><p class="desc" style="margin-top:10px;">12 meses de compras · seed 42 · ground truth para evaluar detección.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§22</span> Familias de métricas</h2>
+        <div class="grid grid-4 reveal">
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Producto</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">opportunity_view_rate</span><span class="chip">acceptance_rate</span><span class="chip">approval_rate</span><span class="chip">time_to_action</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Growth</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">activation</span><span class="chip">conversion</span><span class="chip">reactivation_rate</span><span class="chip">MRR uplift</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">AI</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">grounded_output_rate</span><span class="chip">judge_pass_rate</span><span class="chip">hallucination_rate</span><span class="chip">cost_per_generation</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Agente</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">workflow_success_rate</span><span class="chip">tool_success_rate</span><span class="chip">escalation_rate</span><span class="chip">retry_rate</span></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§23</span> Evaluación causal</h2>
+        <div class="card reveal">
+          <div class="code">uplift = conversion_treatment − conversion_control
+incremental_value = incremental_conversions × avg_ticket</div>
+          <p class="desc" style="margin-top:12px;">Todo resultado se etiqueta como <span class="tag">OBSERVED</span> <span class="tag amber">ESTIMATED</span> <span class="tag muted">ASSUMPTION</span> — nunca se atribuye toda la conversión a la IA.</p>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§24</span> Guion de demo</h2>
+        <div class="reveal">
+          <div class="scene"><div class="sc-n">ESCENA 01</div><div><h4>Problema</h4><p>Una PYME no puede revisar manualmente qué cliente debería contactar hoy.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 02</div><div><h4>Detección</h4><p>Encontramos oportunidades de reactivación.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 03</div><div><h4>Priorización</h4><p>Expected Value × Reactivation Score × Confidence.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 04</div><div><h4>Explicación</h4><p>Evidencia + reason codes, nunca chain-of-thought interno.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 05</div><div><h4>Next Best Action</h4><p>Send personalized reactivation message.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 06</div><div><h4>GenAI</h4><p>Mensaje generado por el Communication Agent.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 07</div><div><h4>Guardrails</h4><p>Grounded: PASS · Policy: PASS · Brand: PASS · Risk: LOW.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 08</div><div><h4>HITL</h4><p>El usuario presiona Approve.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 09</div><div><h4>Execution</h4><p>Mock send — sin canal real todavía.</p></div></div>
+          <div class="scene"><div class="sc-n">ESCENA 10</div><div><h4>Measurement</h4><p>Treatment · Control · Uplift · Revenue incremental · AI cost · ROI proxy.</p></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§25</span> Acceptance criteria del MVP</h2>
+        <div class="checklist reveal">
+          <div class="check-item"><span class="box"></span>Levanta todo localmente con un comando</div>
+          <div class="check-item"><span class="box"></span>Genera datos sintéticos reproducibles</div>
+          <div class="check-item"><span class="box"></span>Construye Customer 360</div>
+          <div class="check-item"><span class="box"></span>Calcula estado y scores</div>
+          <div class="check-item"><span class="box"></span>Detecta candidatos de reactivación</div>
+          <div class="check-item"><span class="box"></span>Prioriza oportunidades con reason codes</div>
+          <div class="check-item"><span class="box"></span>Recomienda Next Best Action</div>
+          <div class="check-item"><span class="box"></span>Genera comunicación estructurada</div>
+          <div class="check-item"><span class="box"></span>Ejecuta guardrails y judges</div>
+          <div class="check-item"><span class="box"></span>Rechaza outputs inválidos</div>
+          <div class="check-item"><span class="box"></span>Solicita aprobación humana</div>
+          <div class="check-item"><span class="box"></span>Permite aprobar / rechazar / editar</div>
+          <div class="check-item"><span class="box"></span>Simula envío y previene duplicados</div>
+          <div class="check-item"><span class="box"></span>Asigna control / tratamiento</div>
+          <div class="check-item"><span class="box"></span>Calcula uplift y revenue incremental</div>
+          <div class="check-item"><span class="box"></span>Muestra trazabilidad y costo de IA</div>
+          <div class="check-item"><span class="box"></span>Pruebas unitarias, integración y E2E</div>
+          <div class="check-item"><span class="box"></span>Sin credenciales, aislamiento por tenant</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§26</span> No-Go list</h2>
+        <p class="desc reveal" style="margin-bottom:12px;">No implementar todavía — disciplina antes que sofisticación:</p>
+        <div class="chip-row reveal">
+          <span class="chip">Multiagente con 8+ agentes</span><span class="chip">Autonomous financial execution</span><span class="chip">Pagos reales</span>
+          <span class="chip">Cambios contables / tributarios</span><span class="chip">Campañas masivas reales</span><span class="chip">RAG sin caso de uso</span>
+          <span class="chip">Fine-tuning</span><span class="chip">Reinforcement learning</span><span class="chip">Kafka obligatorio</span>
+          <span class="chip">Kubernetes obligatorio</span><span class="chip">Microservicios prematuros</span><span class="chip">Vector DB sin retrieval real</span>
+        </div>
+
+        <div class="quote reveal" style="margin-top:36px;">"La PYME recibió una acción concreta, la entendió, confió en ella, la ejecutó, y produjo o protegió valor medible."
+          <span>CRITERIO DE ÉXITO DEL PROYECTO — §65</span>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="roadmap"><span class="lab">Anterior</span>← Roadmap &amp; Equipo</button>
+          <button class="nav-btn" data-goto="overview"><span class="lab">Volver al inicio</span>Visión &amp; Problema →</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad:false,
+  theme:'base',
+  securityLevel:'loose',
+  themeVariables:{
+    background:'#0d1512',
+    primaryColor:'#101815',
+    primaryTextColor:'#e9f3ee',
+    primaryBorderColor:'#1be3b8',
+    lineColor:'#4d8a7c',
+    secondaryColor:'#0d1512',
+    tertiaryColor:'#0d1512',
+    fontFamily:'JetBrains Mono, monospace',
+    fontSize:'12px',
+    edgeLabelBackground:'#0d1512',
+    clusterBkg:'#0d1512',
+    clusterBorder:'#1be3b8'
+  },
+  flowchart:{curve:'basis', htmlLabels:true},
+  stateDiagram:{ }
+});
+
+const tabs = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.tab-panel');
+const renderedDiagrams = new WeakSet();
+
+function activateTab(id){
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  panels.forEach(p=>{
+    const isTarget = p.id === 'panel-'+id;
+    p.classList.toggle('active', isTarget);
+  });
+  const panel = document.getElementById('panel-'+id);
+  panel.scrollTop = 0;
+
+  // render mermaid diagrams lazily, once panel is visible
+  const diagrams = panel.querySelectorAll('.mermaid');
+  diagrams.forEach(async (el)=>{
+    if(!renderedDiagrams.has(el)){
+      renderedDiagrams.add(el);
+      try{
+        const code = el.textContent;
+        const id = 'm'+Math.random().toString(36).slice(2,9);
+        const {svg} = await mermaid.render(id, code);
+        el.innerHTML = svg;
+      }catch(e){ console.error(e); }
+    }
+  });
+
+  // stagger reveal animation
+  const items = panel.querySelectorAll('.reveal');
+  items.forEach(el=>el.classList.remove('shown'));
+  requestAnimationFrame(()=>{
+    items.forEach((el,i)=>{
+      el.style.transitionDelay = Math.min(i*45,600)+'ms';
+      requestAnimationFrame(()=>el.classList.add('shown'));
+    });
+  });
+}
+
+tabs.forEach(btn=>{
+  btn.addEventListener('click', ()=>activateTab(btn.dataset.tab));
+});
+document.querySelectorAll('[data-goto]').forEach(btn=>{
+  btn.addEventListener('click', ()=>activateTab(btn.dataset.goto));
+});
+
+// initial render
+activateTab('overview');
+</script>
+</body>
+</html>

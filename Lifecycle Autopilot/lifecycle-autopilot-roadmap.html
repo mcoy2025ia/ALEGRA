@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lifecycle Autopilot — Ruta de Desarrollo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --primary:#00B19D;
+  --primary-dark:#007F72;
+  --primary-deep:#004D46;
+  --soft:#DFF7F3;
+  --mist:#F3FBFA;
+  --white:#FFFFFF;
+  --charcoal:#1F2933;
+  --midgray:#667085;
+  --lightgray:#E8ECEF;
+  --bg:#F7F9FA;
+  --amber:#C97A2B;
+  --red:#C24545;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(1100px 620px at 10% -8%, #E8F8F4 0%, transparent 55%),
+    radial-gradient(900px 560px at 108% 8%, #EAF6F2 0%, transparent 50%),
+    radial-gradient(1000px 700px at 50% 130%, #E4F4EF 0%, transparent 55%),
+    var(--bg);
+  color:var(--charcoal);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--primary);color:#fff;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--lightgray);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:var(--primary);}
+
+.shell{height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
+
+/* faint dot-grid texture across the whole app, like a signal lattice */
+.bg-dots{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(0,127,114,.14) 1px, transparent 1px);
+  background-size:26px 26px;
+  mask-image:radial-gradient(ellipse 85% 65% at 50% 0%, #000 0%, transparent 72%);
+}
+
+/* HUD */
+.hud{
+  display:flex;align-items:center;gap:18px;
+  padding:10px 22px;
+  border-bottom:1px solid var(--lightgray);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(8px);
+  flex-shrink:0;
+  position:relative;
+}
+.hud::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:linear-gradient(90deg, transparent, var(--primary) 20%, var(--primary) 80%, transparent);
+  opacity:.55;
+}
+.hud-brand{display:flex;align-items:center;gap:10px;}
+.hud-logo{height:40px;width:auto;border-radius:6px;display:block;}
+.hud-name{font-family:var(--font-display);font-weight:600;font-size:14.5px;letter-spacing:.02em;color:var(--charcoal);}
+.hud-name b{color:var(--primary-dark);font-weight:600;}
+.hud-sep{width:1px;height:18px;background:var(--lightgray);}
+.hud-mono{font-family:var(--font-mono);font-size:11px;color:var(--midgray);letter-spacing:.02em;}
+.hud-status{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;color:var(--primary-dark);
+  padding:5px 10px;border:1px solid var(--soft);background:var(--mist);border-radius:20px;
+}
+.hud-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 0 rgba(0,177,157,.5);animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{
+  0%{box-shadow:0 0 0 0 rgba(0,177,157,.45);}
+  70%{box-shadow:0 0 0 7px rgba(0,177,157,0);}
+  100%{box-shadow:0 0 0 0 rgba(0,177,157,0);}
+}
+.hud-level{display:none;}
+@media (min-width:720px){.hud-level{display:flex;}}
+
+.main{flex:1;display:flex;min-height:0;}
+
+/* rail */
+.rail{
+  width:236px;flex-shrink:0;
+  border-right:1px solid var(--lightgray);
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(243,251,250,.92));
+  backdrop-filter:blur(6px);
+  padding:22px 12px;
+  display:flex;flex-direction:column;gap:2px;
+  overflow-y:auto;
+  box-shadow:1px 0 0 rgba(255,255,255,.6) inset;
+}
+@media (max-width:880px){
+  .rail{width:64px;padding:16px 6px;}
+  .rail .tab-label{display:none;}
+  .rail .tab-btn{justify-content:center;}
+}
+.rail-eyebrow{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  color:var(--midgray);text-transform:uppercase;
+  padding:6px 12px 10px;
+}
+@media (max-width:880px){.rail-eyebrow{display:none;}}
+.tab-btn{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 12px;border-radius:10px;
+  background:transparent;border:1px solid transparent;
+  color:var(--midgray);cursor:pointer;text-align:left;
+  font-family:var(--font-body);font-size:13.5px;font-weight:500;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
+  position:relative;
+}
+.tab-btn:hover{color:var(--charcoal);background:var(--mist);}
+.tab-btn .idx{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--midgray);
+  width:18px;flex-shrink:0;
+}
+.tab-btn.active{
+  color:var(--primary-deep);background:var(--soft);
+  border-color:rgba(0,177,157,.35);
+}
+.tab-btn.active .idx{color:var(--primary-dark);}
+.tab-btn.active::before{
+  content:"";position:absolute;left:-13px;top:50%;transform:translateY(-50%);
+  width:3px;height:60%;background:var(--primary);border-radius:3px;
+}
+@media (max-width:880px){.tab-btn.active::before{display:none;}}
+.rail-foot{margin-top:auto;padding:14px 12px 4px;font-family:var(--font-mono);font-size:10px;color:var(--midgray);line-height:1.7;}
+@media (max-width:880px){.rail-foot{display:none;}}
+
+/* content */
+.content{flex:1;position:relative;min-width:0;background:transparent;}
+.tab-panel{
+  position:absolute;inset:0;
+  overflow-y:auto;overflow-x:hidden;
+  padding:44px clamp(20px,4vw,64px) 90px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(10px);
+  transition:opacity .35s ease, transform .4s ease;
+}
+.tab-panel.active{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s cubic-bezier(.2,.7,.2,1), transform .55s cubic-bezier(.2,.7,.2,1);}
+.reveal.shown{opacity:1;transform:translateY(0);}
+
+/* typography */
+.eyebrow{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--primary-dark);display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:16px;height:1px;background:var(--primary);}
+h1.page-title{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(26px,3.4vw,42px);
+  letter-spacing:-.01em;line-height:1.12;margin-bottom:14px;max-width:820px;color:var(--charcoal);
+}
+h1.page-title em{color:var(--primary-dark);font-style:normal;}
+.lede{font-size:15.5px;color:var(--midgray);max-width:660px;line-height:1.7;margin-bottom:36px;}
+h2.section-title{
+  font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-.01em;
+  margin:56px 0 20px;display:flex;align-items:center;gap:12px;color:var(--charcoal);
+  padding-top:22px;border-top:1px solid var(--lightgray);
+}
+h2.section-title .n{
+  font-family:var(--font-mono);font-size:10.5px;font-weight:600;color:var(--primary-dark);
+  background:var(--soft);border:1px solid rgba(0,177,157,.35);
+  padding:4px 10px;border-radius:20px;letter-spacing:.02em;flex-shrink:0;
+}
+h2.section-title:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+h3.card-title{font-family:var(--font-display);font-weight:600;font-size:15px;margin-bottom:8px;color:var(--charcoal);}
+p.desc{color:var(--midgray);font-size:13.4px;line-height:1.65;}
+
+/* grid & cards */
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.card{
+  background:linear-gradient(165deg, #ffffff, #FAFEFD 60%, var(--mist));
+  border:1px solid var(--lightgray);border-radius:var(--radius);
+  padding:20px;position:relative;overflow:hidden;
+  box-shadow:0 1px 2px rgba(31,41,51,.04), 0 10px 24px -18px rgba(0,127,114,.35);
+  transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+.card:hover{border-color:rgba(0,177,157,.45);transform:translateY(-3px);box-shadow:0 16px 32px -14px rgba(0,127,114,.28), 0 4px 10px rgba(31,41,51,.05);}
+.card::before{
+  content:"";position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:linear-gradient(180deg, var(--primary), var(--primary-dark));
+  opacity:0;transition:opacity .3s ease;
+}
+.card:hover::before{opacity:1;}
+.card::after{
+  content:"";position:absolute;top:-40%;right:-30%;width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle, rgba(0,177,157,.10), transparent 70%);
+  opacity:0;transition:opacity .35s ease;pointer-events:none;
+}
+.card:hover::after{opacity:1;}
+
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;
+  color:var(--primary-dark);background:var(--soft);border:1px solid rgba(0,177,157,.3);
+  padding:3px 8px;border-radius:20px;
+}
+.tag.amber{color:var(--amber);background:#FBF0E3;border-color:#EBCFA3;}
+.tag.muted{color:var(--midgray);background:var(--mist);border-color:var(--lightgray);}
+.tag.red{color:var(--red);background:#FBEAEA;border-color:#EEC7C7;}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{
+  font-family:var(--font-mono);font-size:11px;color:var(--charcoal);
+  background:var(--mist);border:1px solid var(--lightgray);
+  padding:5px 10px;border-radius:8px;
+  box-shadow:0 1px 1px rgba(31,41,51,.02);
+  transition:border-color .2s ease, background .2s ease;
+}
+.chip:hover{border-color:rgba(0,177,157,.4);background:var(--soft);}
+
+.quote{
+  border-left:2px solid var(--primary);padding:4px 0 4px 20px;margin:22px 0;
+  font-family:var(--font-display);font-weight:500;font-size:17px;line-height:1.55;
+  color:var(--charcoal);max-width:680px;
+}
+.quote span{display:block;margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--midgray);font-weight:400;}
+
+.code{
+  font-family:var(--font-mono);font-size:12px;line-height:1.7;color:#0B3D37;
+  background:var(--mist);border:1px solid var(--lightgray);border-radius:10px;
+  padding:16px 18px;overflow-x:auto;white-space:pre;
+}
+.code .k{color:var(--primary-dark);font-weight:600;}
+.code .c{color:var(--midgray);}
+.code.dark{background:#062D28;color:#BFF3EA;border-color:#0A423B;}
+.code.dark .k{color:#6FE3CC;}
+.code.dark .c{color:#5B9089;}
+
+.diagram{
+  background:linear-gradient(180deg,#ffffff,var(--mist));border:1px solid var(--lightgray);border-radius:var(--radius);
+  padding:22px;overflow-x:auto;margin:18px 0 8px;
+  box-shadow:0 1px 2px rgba(31,41,51,.04), 0 14px 30px -22px rgba(0,127,114,.4);
+  position:relative;
+}
+.diagram::before{
+  content:"";position:absolute;top:0;left:18px;right:18px;height:2px;
+  background:linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity:.6;
+}
+.diagram .mermaid{display:flex;justify-content:center;min-width:560px;}
+.diagram-cap{font-family:var(--font-mono);font-size:10.5px;color:var(--midgray);margin-top:10px;letter-spacing:.03em;}
+
+.checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;}
+@media (max-width:760px){.checklist{grid-template-columns:1fr;}}
+.check-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--midgray);line-height:1.5;padding:6px 0;border-bottom:1px dashed var(--lightgray);}
+.check-item .box{width:14px;height:14px;flex-shrink:0;margin-top:2px;border:1px solid var(--primary);border-radius:4px;position:relative;}
+.check-item .box::after{content:"";position:absolute;inset:2.5px;background:var(--primary);border-radius:2px;transform:scale(0);transition:transform .2s;}
+.check-item:hover .box::after{transform:scale(1);}
+
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat .num{font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--primary-dark);background:linear-gradient(90deg,var(--primary-dark),var(--primary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.stat .lab{font-family:var(--font-mono);font-size:10.5px;color:var(--midgray);letter-spacing:.04em;text-transform:uppercase;}
+
+.phase-row{display:flex;gap:16px;align-items:flex-start;position:relative;padding:0 0 30px 0;}
+.phase-row .rail-line{position:absolute;left:17px;top:36px;bottom:0;width:1px;background:var(--lightgray);}
+.phase-row:last-child .rail-line{display:none;}
+.phase-dot{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:12px;color:var(--primary-dark);
+  border:1px solid var(--primary);background:var(--soft);z-index:1;
+}
+.phase-body{flex:1;padding-top:4px;}
+.phase-body h4{font-family:var(--font-display);font-size:15px;font-weight:600;margin-bottom:5px;color:var(--charcoal);}
+
+.levels{display:flex;flex-direction:column;gap:10px;}
+.level{
+  display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:10px;
+  border:1px solid var(--lightgray);background:var(--white);
+}
+.level .lv-num{font-family:var(--font-mono);font-size:11px;color:var(--midgray);width:64px;flex-shrink:0;}
+.level.is-mvp{border-color:rgba(0,177,157,.5);background:var(--mist);}
+.level.is-mvp .lv-num{color:var(--primary-dark);}
+.level p{font-size:13px;color:var(--midgray);}
+.level.is-mvp p{color:var(--charcoal);}
+.level .mvp-badge{margin-left:auto;flex-shrink:0;}
+.level.never{border-color:#EEC7C7;background:#FBEAEA;}
+.level.never .lv-num{color:var(--red);}
+
+.owner-card{border-radius:16px;padding:24px;position:relative;overflow:hidden;border:1px solid var(--lightgray);background:linear-gradient(165deg,#ffffff,var(--mist));box-shadow:0 1px 2px rgba(31,41,51,.04), 0 16px 32px -22px rgba(0,127,114,.4);transition:transform .25s ease, box-shadow .25s ease;}
+.owner-card:hover{transform:translateY(-3px);}
+.owner-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-dark));}
+.owner-card .owner-tag{font-family:var(--font-mono);font-size:11px;color:var(--midgray);letter-spacing:.1em;text-transform:uppercase;}
+.owner-card h3{font-family:var(--font-display);font-size:19px;font-weight:600;margin:4px 0 14px;color:var(--charcoal);}
+.owner-card ul{padding-left:18px;color:var(--midgray);font-size:12.8px;line-height:1.85;}
+.owner-card .paths{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;}
+.owner-card .deliverable{
+  margin-top:16px;padding:10px 12px;border-radius:8px;border:1px dashed rgba(0,177,157,.4);
+  font-family:var(--font-mono);font-size:11px;color:var(--primary-dark);background:var(--mist);
+}
+
+.panel-nav{display:flex;justify-content:space-between;align-items:center;margin-top:64px;padding-top:24px;border-top:1px solid var(--lightgray);}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;cursor:pointer;background:none;border:none;color:var(--midgray);
+  font-family:var(--font-body);font-size:13px;transition:color .2s;
+}
+.nav-btn:hover{color:var(--primary-dark);}
+.nav-btn .lab{font-family:var(--font-mono);font-size:10px;color:var(--midgray);display:block;text-transform:uppercase;letter-spacing:.06em;}
+
+/* hero */
+.hero{
+  display:grid;grid-template-columns:1.05fr .95fr;gap:0;align-items:stretch;margin:-44px -64px 10px;
+  background:linear-gradient(135deg,var(--primary-deep) 0%, #023832 55%, #012623 100%);
+  border-radius:0 0 28px 28px;overflow:hidden;position:relative;
+  box-shadow:0 24px 60px -24px rgba(0,77,70,.55);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:46px 46px;
+  mask-image:radial-gradient(ellipse 90% 90% at 30% 30%, #000 0%, transparent 75%);
+}
+.hero::after{
+  content:"";position:absolute;top:-20%;right:-10%;width:60%;height:140%;pointer-events:none;
+  background:radial-gradient(circle, rgba(127,227,210,.14), transparent 65%);
+}
+@media (max-width:980px){.hero{grid-template-columns:1fr;margin:-44px -20px 10px;}}
+.hero-copy{padding:64px clamp(24px,4vw,64px);position:relative;z-index:1;}
+.hero-copy .eyebrow{color:#7FE3D2;}
+.hero-copy .eyebrow::before{background:#7FE3D2;}
+.hero h1.page-title{color:#F3FBFA;max-width:640px;}
+.hero h1.page-title em{color:#7FE3D2;}
+.hero .lede{color:#B9DFD9;max-width:560px;}
+.hero .chip-row .chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#DFF7F3;}
+.hero-loop{display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1;}
+.loop-node{fill:rgba(255,255,255,.06);stroke:rgba(255,255,255,.28);stroke-width:1;}
+.loop-label{font-family:var(--font-mono);font-size:9px;fill:#DFF7F3;letter-spacing:.02em;}
+.loop-path{fill:none;stroke:rgba(255,255,255,.2);stroke-width:1;stroke-dasharray:4 5;}
+
+.promise-box{display:flex;flex-direction:column;gap:14px;margin-top:26px;}
+.bubble{
+  max-width:440px;padding:12px 16px;border-radius:14px;font-size:13.2px;line-height:1.55;
+  border:1px solid var(--lightgray);background:var(--white);
+}
+.bubble .who{font-family:var(--font-mono);font-size:9.5px;color:var(--midgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
+
+.funnel-flow{display:flex;flex-wrap:wrap;align-items:center;gap:0;margin:18px 0;}
+.funnel-node{
+  font-family:var(--font-mono);font-size:11px;color:var(--primary-deep);
+  background:var(--soft);border:1px solid rgba(0,177,157,.35);
+  padding:8px 12px;border-radius:8px;white-space:nowrap;
+}
+.funnel-arrow{color:var(--midgray);padding:0 8px;font-size:13px;}
+
+.score-formula{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+.score-bar-row{display:flex;align-items:center;gap:12px;}
+.score-bar-row .label{width:230px;flex-shrink:0;font-size:12px;color:var(--midgray);font-family:var(--font-mono);}
+.score-bar-track{flex:1;height:8px;border-radius:6px;background:var(--lightgray);overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--primary-dark),var(--primary));}
+.score-bar-row .pct{width:52px;text-align:right;font-family:var(--font-mono);font-size:11.5px;color:var(--primary-dark);}
+
+.scene{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--lightgray);}
+.scene:last-child{border-bottom:none;}
+.scene .sc-n{font-family:var(--font-mono);color:var(--midgray);font-size:11px;width:96px;flex-shrink:0;padding-top:3px;}
+.scene h4{font-family:var(--font-display);font-size:14.5px;margin-bottom:4px;color:var(--charcoal);}
+.scene p{font-size:12.8px;color:var(--midgray);line-height:1.55;}
+
+table.spec-table{width:100%;border-collapse:collapse;font-size:12.6px;background:var(--white);border:1px solid var(--lightgray);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(31,41,51,.03);}
+table.spec-table th{
+  text-align:left;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--midgray);padding:10px 12px;border-bottom:1px solid var(--lightgray);
+}
+table.spec-table td{padding:11px 12px;border-bottom:1px solid var(--lightgray);color:var(--midgray);}
+table.spec-table tr:hover td{color:var(--charcoal);background:var(--mist);}
+table.spec-table td:first-child, table.spec-table th:first-child{color:var(--primary-dark);font-family:var(--font-mono);}
+
+.persona-card{border:1px solid var(--lightgray);background:linear-gradient(165deg,#ffffff,var(--mist));border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(31,41,51,.04), 0 12px 26px -20px rgba(0,127,114,.4);position:relative;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease;}
+.persona-card:hover{transform:translateY(-3px);box-shadow:0 18px 34px -18px rgba(0,127,114,.32);}
+.persona-card .p-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.persona-card h3{font-family:var(--font-display);font-size:15.5px;color:var(--charcoal);}
+.persona-card .p-signals{display:flex;flex-direction:column;gap:4px;margin:10px 0;}
+.persona-card .p-signals div{font-size:12px;color:var(--midgray);padding-left:14px;position:relative;}
+.persona-card .p-signals div::before{content:"—";position:absolute;left:0;color:var(--primary);}
+.persona-card .p-action{margin-top:12px;padding:9px 12px;border-radius:8px;background:var(--soft);font-family:var(--font-mono);font-size:11.5px;color:var(--primary-deep);}
+
+@media (max-width:880px){.grid-3, .grid-4 {grid-template-columns:1fr 1fr;}}
+@media (max-width:560px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}.hud-mono{display:none;}}
+</style>
+</head>
+<body>
+<div class="bg-dots"></div>
+<div class="shell">
+
+  <div class="hud">
+    <div class="hud-brand">
+      <img src="data:image/png;base64,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" class="hud-logo" alt="Alegra">
+      <div class="hud-name">Lifecycle <b>Autopilot</b></div>
+    </div>
+    <div class="hud-sep"></div>
+    <div class="hud-mono">DEVELOPMENT BRIEF · V1.0</div>
+    <div class="hud-status hud-level">
+      <span class="hud-dot"></span> MVP 0 · SIGNALS → LEARN
+    </div>
+  </div>
+
+  <div class="main">
+    <nav class="rail" id="rail">
+      <div class="rail-eyebrow">Navegación</div>
+      <button class="tab-btn active" data-tab="overview"><span class="idx">00</span><span class="tab-label">Tesis &amp; Problema</span></button>
+      <button class="tab-btn" data-tab="architecture"><span class="idx">01</span><span class="tab-label">Arquitectura</span></button>
+      <button class="tab-btn" data-tab="flow"><span class="idx">02</span><span class="tab-label">Lifecycle &amp; Eventos</span></button>
+      <button class="tab-btn" data-tab="scoring"><span class="idx">03</span><span class="tab-label">Scoring &amp; Decisión</span></button>
+      <button class="tab-btn" data-tab="agents"><span class="idx">04</span><span class="tab-label">Agentes &amp; GenAI</span></button>
+      <button class="tab-btn" data-tab="roadmap"><span class="idx">05</span><span class="tab-label">Roadmap &amp; Equipo</span></button>
+      <button class="tab-btn" data-tab="metrics"><span class="idx">06</span><span class="tab-label">Métricas &amp; Demo</span></button>
+      <div class="rail-foot">SIGNALS → CONTEXT<br>→ PREDICT → DECIDE<br>→ ACT → MEASURE<br>→ LEARN</div>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 00 OVERVIEW ===================== -->
+      <section class="tab-panel active" id="panel-overview">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow reveal">00 · Tesis del producto</div>
+            <h1 class="page-title reveal">Alegra no necesita <em>más mensajes</em>.<br>Necesita un cerebro de lifecycle.</h1>
+            <p class="lede reveal">Un sistema que entiende señales del cliente, anticipa intención o fricción, elige la siguiente mejor acción y aprende de su impacto en Revenue. No es un chatbot de IA — es un sistema de decisión de lifecycle.</p>
+            <div class="chip-row reveal"><span class="chip">Signals</span><span class="chip">Context</span><span class="chip">Predict</span><span class="chip">Decide</span><span class="chip">Act</span><span class="chip">Measure</span><span class="chip">Learn</span></div>
+          </div>
+          <div class="hero-loop reveal">
+            <svg viewBox="0 0 340 330" width="100%" height="330" style="max-width:360px;">
+              <path class="loop-path" d="M170,30 L279.45,82.71 L306.5,201.15 L230.75,296.14 L109.25,296.14 L33.5,201.15 L60.55,82.71 Z" />
+              <circle r="4.5" fill="#7FE3D2">
+                <animateMotion dur="10.5s" repeatCount="indefinite"
+                  path="M170,30 L279.45,82.71 L306.5,201.15 L230.75,296.14 L109.25,296.14 L33.5,201.15 L60.55,82.71 Z" />
+              </circle>
+              <g>
+                <circle class="loop-node" cx="170" cy="30" r="30"/><text class="loop-label" x="170" y="34" text-anchor="middle">SIGNALS</text>
+                <circle class="loop-node" cx="279.45" cy="82.71" r="30"/><text class="loop-label" x="279.45" y="86.71" text-anchor="middle">CONTEXT</text>
+                <circle class="loop-node" cx="306.5" cy="201.15" r="30"/><text class="loop-label" x="306.5" y="205.15" text-anchor="middle">PREDICT</text>
+                <circle class="loop-node" cx="230.75" cy="296.14" r="30"/><text class="loop-label" x="230.75" y="300.14" text-anchor="middle">DECIDE</text>
+                <circle class="loop-node" cx="109.25" cy="296.14" r="30"/><text class="loop-label" x="109.25" y="300.14" text-anchor="middle">ACT</text>
+                <circle class="loop-node" cx="33.5" cy="201.15" r="30"/><text class="loop-label" x="33.5" y="205.15" text-anchor="middle">MEASURE</text>
+                <circle class="loop-node" cx="60.55" cy="82.71" r="30"/><text class="loop-label" x="60.55" y="86.71" text-anchor="middle">LEARN</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§1</span> Cinco preguntas que el sistema debe responder — siempre</h2>
+        <div class="grid grid-3 reveal">
+          <div class="card"><span class="tag">1 · WHO</span><p class="desc" style="margin-top:10px;">¿Quién es este usuario y qué tan bueno es el fit?</p></div>
+          <div class="card"><span class="tag">2 · WHAT'S HAPPENING</span><p class="desc" style="margin-top:10px;">¿Qué está haciendo y dónde aparece la fricción?</p></div>
+          <div class="card"><span class="tag">3 · WHAT WILL HAPPEN</span><p class="desc" style="margin-top:10px;">Probabilidad de activación, MQL, SQL, conversión, dropout, reactivación o upsell.</p></div>
+          <div class="card"><span class="tag">4 · WHAT TO DO</span><p class="desc" style="margin-top:10px;">Next Best Action, canal, mensaje y momento.</p></div>
+          <div class="card"><span class="tag">5 · DID IT WORK</span><p class="desc" style="margin-top:10px;">¿La intervención generó progresión de lifecycle o impacto en Revenue medible?</p></div>
+          <div class="card" style="background:var(--soft);border-color:rgba(0,177,157,.4);"><p class="desc" style="color:var(--primary-deep);font-family:var(--font-display);font-weight:600;font-size:14px;">"El lead correcto. El momento correcto. El mensaje correcto. La siguiente mejor acción."</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§2</span> El problema de negocio</h2>
+        <p class="desc reveal" style="max-width:680px;margin-bottom:14px;">No se trata solo de automatizar envíos. Dos usuarios en la misma etapa del funnel pueden necesitar acciones distintas — el sistema debe optimizar <b style="color:var(--charcoal);">transiciones de estado</b>, no solo secuencias de campañas.</p>
+        <div class="funnel-flow reveal">
+          <span class="funnel-node">TRAFFIC</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">SIGN UP</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">ONBOARDING</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">ACTIVATION</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">PRE-MQL</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">MQL</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">SALES READY</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">SQL</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">PAID</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">FEATURE ADOPTION</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">EXPANSION</span><span class="funnel-arrow">→</span>
+          <span class="funnel-node">RETENTION</span>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§4</span> North Star &amp; árbol de KPIs</h2>
+        <div class="card reveal" style="background:var(--soft);border-color:rgba(0,177,157,.4);margin-bottom:16px;">
+          <span class="tag">North Star</span>
+          <h3 class="card-title" style="margin-top:10px;">VDLP — Value-Driven Lifecycle Progressions</h3>
+          <p class="desc">Número de usuarios que avanzan a un estado de mayor valor tras una intervención relevante y medible. No se optimiza por open rate o CTR — son solo métricas de diagnóstico.</p>
+        </div>
+        <div class="grid grid-4 reveal">
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Customer Value</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">TTFV</span><span class="chip">Activation Rate</span><span class="chip">Onboarding Completion</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Lifecycle</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">State Progression</span><span class="chip">Rescue Success</span><span class="chip">Reactivation Rate</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Revenue</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">MQL→SQL</span><span class="chip">New MRR</span><span class="chip">Revenue/Sign Up</span></div></div>
+          <div class="card"><h3 class="card-title" style="font-size:13px;">Guardrails</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">Unsubscribe rate</span><span class="chip">Contact frequency</span><span class="chip">PII leakage</span></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§5</span> Construir angosto primero</h2>
+        <div class="grid grid-2 reveal">
+          <div class="card">
+            <span class="tag">Probar primero</span>
+            <ul style="margin-top:10px;padding-left:18px;color:var(--midgray);font-size:13px;line-height:1.9;">
+              <li>Lifecycle State Machine</li>
+              <li>Fit + Intent + decisión Pre-MQL</li>
+              <li>Onboarding Rescue con mensajería contextual</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag red">No construir primero</span>
+            <div class="chip-row" style="margin-top:10px;">
+              <span class="chip">Multiagente complejo</span><span class="chip">Acciones financieras autónomas</span>
+              <span class="chip">Nuevo CRM</span><span class="chip">Virtual CFO</span><span class="chip">Real-time ML completo</span>
+              <span class="chip">LLM scoring cuando reglas bastan</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <div></div>
+          <button class="nav-btn" data-goto="architecture"><span class="lab">Siguiente</span>Arquitectura del sistema →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 01 ARCHITECTURE ===================== -->
+      <section class="tab-panel" id="panel-architecture">
+        <div class="eyebrow reveal">01 · Arquitectura técnica</div>
+        <h1 class="page-title reveal">Siete capas. <em>La política</em> gobierna sobre la IA.</h1>
+        <p class="lede reveal">El motor de decisión no distingue el canal de entrega hasta el paso de selección de canal. Ningún modelo o agente puede saltarse consentimiento, seguridad o reglas de riesgo.</p>
+
+        <h2 class="section-title reveal" style="margin-top:0;"><span class="n">§25</span> Panorama general — cliente, agentes, MCP y adapters</h2>
+        <p class="desc reveal" style="margin-bottom:10px;max-width:720px;">MCP recupera contexto. Las APIs y workflows ejecutan acciones. El policy engine controla ambos.</p>
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph TD
+  subgraph SIG["Señales — Web · CRM · Producto · Marketing · Sales · CS"]
+    S1["signup_complete"]
+    S2["onboarding_stall"]
+    S3["pricing_revisit"]
+    S4["dormancy_detected"]
+  end
+
+  SIG --> ING["Event Ingestion<br/>contrato canónico · idempotente"]
+  ING --> CTX["Customer Context Layer<br/>Identity · Lifecycle State · Consent"]
+
+  subgraph CLI["Cliente — Next.js Web App"]
+    C360["Customer 360"]
+    DLAB["Decision Lab"]
+    DASH["Lifecycle Dashboard"]
+  end
+
+  CTX <--> CLI
+
+  CTX --> ORCH
+
+  subgraph AG["Journey Orchestrator + Agentes (MVP3)"]
+    ORCH["Journey Orchestrator"]
+    SCORE["Fit · Intent · Propensity"]
+    FRIC["Friction Detection"]
+    NBA["NBA Engine"]
+    CONTENT["Content Agent (GenAI)"]
+    ORCH --> SCORE --> FRIC --> NBA --> CONTENT
+  end
+
+  ORCH --> POLICY{{"Policy Engine<br/>overrides AI"}}
+  POLICY -- requiere aprobación --> HITL["Human Approval Queue"]
+  POLICY -- auto dentro de política --> MCP
+  HITL -- approve --> MCP
+
+  subgraph MCP["MCP / Tool Registry"]
+    T1["get_customer_context"]
+    T2["generate_message"]
+    T3["simulate_send_message"]
+    T4["record_outcome"]
+  end
+
+  subgraph EXT["Adapters (mock / sandbox)"]
+    CRM["CRM Adapter"]
+    MSG["Messaging Adapter"]
+    BCTX["Business Context Adapter"]
+  end
+
+  MCP --> CRM
+  MCP --> MSG
+  MCP --> BCTX
+
+  MCP --> DATA[("Measurement Layer<br/>Outcome · Experiment · Attribution")]
+  DATA --> DASH
+  DATA -. aprendizaje .-> SCORE
+          </pre>
+          <div class="diagram-cap">FIG. 00 — Panorama general: señales → cliente → orquestador/agentes → policy/HITL → MCP → adapters → medición</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§55</span> Arquitectura de alto nivel — por capas</h2>
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph TD
+  A["Signal Layer<br/>Web · CRM · Producto · Marketing · Sales · CS · Context"] --> B["Customer Context Layer<br/>Identity · Events · Lifecycle State · Consent · Value Events"]
+  B --> C["Intelligence Layer<br/>Fit · Intent · Propensity · Friction · Segmentation"]
+  C --> D["Decision / Policy Layer<br/>Candidate Actions · NBA · Caps · Consent · Approval"]
+  D --> E1["GenAI Layer<br/>Copy · Explain · Summary"]
+  D --> E2["Human Approval Queue<br/>Sensitive / high-risk"]
+  E1 --> F["Action Layer<br/>Email · WhatsApp · In-App · CRM Task · Sales · Mock Adapters"]
+  E2 --> F
+  F --> G["Measurement Layer<br/>Outcome · Experiment · Attribution · Monitoring · Learn"]
+          </pre>
+          <div class="diagram-cap">FIG. 01 — §55 Arquitectura de alto nivel</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§54</span> Principios de arquitectura</h2>
+        <div class="grid grid-4 reveal">
+          <div class="card"><span class="tag">01</span><p class="desc" style="margin-top:8px;">El decisioning es independiente del canal — hasta el paso de selección de canal.</p></div>
+          <div class="card"><span class="tag">02</span><p class="desc" style="margin-top:8px;">La política tiene prioridad sobre la IA. Ningún agente salta consentimiento o riesgo.</p></div>
+          <div class="card"><span class="tag">03</span><p class="desc" style="margin-top:8px;">Explicable antes que sofisticado — reglas transparentes sobre modelos opacos sin lift medido.</p></div>
+          <div class="card"><span class="tag">04</span><p class="desc" style="margin-top:8px;">Dominio orientado a eventos — el estado se deriva de eventos y tiempo.</p></div>
+          <div class="card"><span class="tag">05</span><p class="desc" style="margin-top:8px;">Desarrollo synthetic-first — sin dependencia de datos propietarios de Alegra.</p></div>
+          <div class="card"><span class="tag">06</span><p class="desc" style="margin-top:8px;">Abstracción de proveedor — CRM, mensajería, LLM y MCP son adapters.</p></div>
+          <div class="card"><span class="tag">07</span><p class="desc" style="margin-top:8px;">La aprobación humana es un estado de primera clase, no un añadido al final.</p></div>
+          <div class="card"><span class="tag">08</span><p class="desc" style="margin-top:8px;">Toda intervención mide su outcome — con ventana de medición explícita.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§7</span> Stack de referencia</h2>
+        <div class="grid grid-4 reveal">
+          <div class="card"><span class="tag">Frontend</span><p class="desc" style="margin-top:10px;">Next.js + TypeScript · React · Tailwind · Recharts / ECharts.</p></div>
+          <div class="card"><span class="tag">Backend</span><p class="desc" style="margin-top:10px;">Python + FastAPI · Pydantic · SQLAlchemy/SQLModel · Alembic.</p></div>
+          <div class="card"><span class="tag">Base de datos</span><p class="desc" style="margin-top:10px;">PostgreSQL. pgvector solo si hay retrieval real; Redis solo si hace falta.</p></div>
+          <div class="card"><span class="tag">ML / Analytics</span><p class="desc" style="margin-top:10px;">pandas · scikit-learn · numpy · XGBoost/LightGBM solo si se justifica.</p></div>
+          <div class="card"><span class="tag">GenAI</span><p class="desc" style="margin-top:10px;">Abstracción de proveedor: OpenAI-compatible · Anthropic-compatible · Gemini-compatible · Mock.</p></div>
+          <div class="card"><span class="tag">Orquestación</span><p class="desc" style="margin-top:10px;">MVP0–2: motor de políticas determinístico. MVP3: LangGraph opcional.</p></div>
+          <div class="card"><span class="tag">Dev / Infra</span><p class="desc" style="margin-top:10px;">Docker + Compose · pytest · Playwright · CI compatible con GitHub Actions.</p></div>
+          <div class="card"><span class="tag">ADR recomendado</span><p class="desc" style="margin-top:10px;">Monolito modular. No microservicios sin necesidad concreta.</p></div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="overview"><span class="lab">Anterior</span>← Tesis &amp; Problema</button>
+          <button class="nav-btn" data-goto="flow"><span class="lab">Siguiente</span>Lifecycle &amp; Eventos →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 02 FLOW ===================== -->
+      <section class="tab-panel" id="panel-flow">
+        <div class="eyebrow reveal">02 · Lifecycle, eventos y secuencias</div>
+        <h1 class="page-title reveal">El estado no es el <em>campo del CRM</em>.<br>Se deriva de eventos, tiempo, scores y políticas.</h1>
+        <p class="lede reveal">El prototipo posee su propio modelo canónico de lifecycle; los adapters traducen desde/hacia herramientas externas.</p>
+
+        <div class="diagram reveal">
+          <pre class="mermaid">
+stateDiagram-v2
+  [*] --> NEW
+  NEW --> DISCOVERING: signup_complete
+  DISCOVERING --> ENGAGED: pricing_view / content_engaged / onboarding_started
+  ENGAGED --> ACTIVATED: value event
+  ACTIVATED --> PRE_MQL: Fit≥50 · Intent≥45
+  PRE_MQL --> MQL: Fit≥65 · Intent≥60 · 2+ value events
+  MQL --> SALES_READY: propensity alta o trigger determinístico
+  SALES_READY --> SQL
+  SQL --> CUSTOMER
+
+  ACTIVATED --> STALLED
+  DISCOVERING --> DROPOUT_RISK: fricción alta + inactividad
+  ACTIVATED --> DORMANT: inactividad tras engagement
+  DORMANT --> REACTIVATION_READY: valor histórico + score positivo
+  CUSTOMER --> EXPANSION_READY
+          </pre>
+          <div class="diagram-cap">FIG. 02 — §12 Máquina de estados de lifecycle (estados primarios + estados de riesgo)</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§13</span> Taxonomía de fricción</h2>
+        <div class="grid grid-3 reveal">
+          <div class="card"><span class="tag">1</span><h3 class="card-title" style="margin-top:8px;">Knowledge Friction</h3><p class="desc">El usuario no entiende qué hacer. Tratamiento: tutorial contextual, CTA simplificado.</p></div>
+          <div class="card"><span class="tag">2</span><h3 class="card-title" style="margin-top:8px;">Setup Friction</h3><p class="desc">Sabe el objetivo pero la configuración es difícil. Tratamiento: rescue flow, ayuda de importación.</p></div>
+          <div class="card"><span class="tag">3</span><h3 class="card-title" style="margin-top:8px;">Trust Friction</h3><p class="desc">Duda por migración, seguridad o compliance. Tratamiento: contenido de confianza, FAQ, soporte humano.</p></div>
+          <div class="card"><span class="tag">4</span><h3 class="card-title" style="margin-top:8px;">Value Friction</h3><p class="desc">No ha experimentado un resultado significativo. Tratamiento: First Value mission.</p></div>
+          <div class="card"><span class="tag">5</span><h3 class="card-title" style="margin-top:8px;">Timing Friction</h3><p class="desc">Buen fit, baja urgencia. Tratamiento: nurture de baja frecuencia, sin handoff agresivo a Sales.</p></div>
+          <div class="card"><span class="tag">6</span><h3 class="card-title" style="margin-top:8px;">Commercial Friction</h3><p class="desc">Pricing, plan o aprobación. Tratamiento: comparación de planes, handoff a Sales.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§10</span> Taxonomía de eventos</h2>
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="card"><h3 class="card-title">Adquisición → Onboarding</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">landing_view</span><span class="chip">signup_complete</span><span class="chip">onboarding_step_completed</span><span class="chip">onboarding_stall</span><span class="chip">onboarding_abandoned</span><span class="chip">import_completed</span></div></div>
+          <div class="card"><h3 class="card-title">Product Value Events</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">first_invoice_issued</span><span class="chip">first_customer_created</span><span class="chip">first_reconciliation_completed</span><span class="chip">first_recommendation_accepted</span></div></div>
+          <div class="card"><h3 class="card-title">Sales / Revenue</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">pre_mql_entered</span><span class="chip">mql_entered</span><span class="chip">sql_created</span><span class="chip">paid_conversion</span><span class="chip">plan_upgraded</span><span class="chip">subscription_cancelled</span></div></div>
+          <div class="card"><h3 class="card-title">Fricción</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">repeat_error</span><span class="chip">step_back</span><span class="chip">session_abandon</span><span class="chip">support_request</span><span class="chip">failed_import</span></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§11</span> Contrato canónico de evento</h2>
+        <div class="code reveal">{
+  <span class="k">"event_id"</span>: <span class="c">"evt_123"</span>,
+  <span class="k">"event_name"</span>: <span class="c">"pricing_view"</span>,
+  <span class="k">"event_category"</span>: <span class="c">"acquisition"</span>,
+  <span class="k">"customer_id"</span>: <span class="c">"cus_123"</span>,
+  <span class="k">"timestamp"</span>: <span class="c">"2026-08-11T15:30:00Z"</span>,
+  <span class="k">"source"</span>: <span class="c">"web"</span>,
+  <span class="k">"properties"</span>: { <span class="k">"page"</span>: <span class="c">"/pricing"</span>, <span class="k">"country"</span>: <span class="c">"CO"</span> },
+  <span class="k">"experiment_context"</span>: { <span class="k">"experiment_id"</span>: null, <span class="k">"variant"</span>: null }
+}</div>
+
+        <h2 class="section-title reveal"><span class="n">§56 · §57</span> Secuencias clave</h2>
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="diagram" style="margin:0;">
+            <pre class="mermaid">
+graph TD
+  A["Product Event"] --> B["Event Ingestion"]
+  B --> C["Lifecycle State Service"]
+  C --> D["Friction Detection"]
+  D --> E["Dropout Risk"]
+  E --> F["Policy Check"]
+  F --> G["NBA = ONBOARDING_RESCUE"]
+  G --> H["Content Generation"]
+  H --> I["Simulated WhatsApp"]
+  I --> J["Intervention Logged"]
+  J --> K["Outcome Event"]
+  K --> L["State + Metric Update"]
+            </pre>
+            <div class="diagram-cap">FIG. 03 — Onboarding Rescue</div>
+          </div>
+          <div class="diagram" style="margin:0;">
+            <pre class="mermaid">
+graph TD
+  A["Fit + Intent + Value Events + Propensity"] --> B["MQL Decision"]
+  B --> C["Sales-Ready Evaluation"]
+  C --> D["Policy Check"]
+  D --> E["Create CRM Task (Mock)"]
+  E --> F["Suppress Marketing Nurture"]
+  F --> G["Sales Outcome / SQL Event"]
+  G --> H["Revenue Analytics"]
+            </pre>
+            <div class="diagram-cap">FIG. 04 — MQL → SQL Handoff</div>
+          </div>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="architecture"><span class="lab">Anterior</span>← Arquitectura</button>
+          <button class="nav-btn" data-goto="scoring"><span class="lab">Siguiente</span>Scoring &amp; Decisión →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 03 SCORING ===================== -->
+      <section class="tab-panel" id="panel-scoring">
+        <div class="eyebrow reveal">03 · Scoring &amp; motor de decisión</div>
+        <h1 class="page-title reveal">Fit, Intent, Value y Propensity<br>son <em>cuatro conceptos distintos</em>.</h1>
+        <p class="lede reveal">Nunca un score único y misterioso. Cada decisión Pre-MQL/MQL expone reason codes verificables.</p>
+
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="card">
+            <span class="tag">§14</span>
+            <h3 class="card-title" style="margin-top:8px;">Fit Score (0–100)</h3>
+            <p class="desc" style="margin-bottom:10px;">¿Es esta la Pyme/cuenta correcta para el motion objetivo?</p>
+            <div class="score-formula">
+              <div class="score-bar-row"><div class="label">País soportado / objetivo</div><div class="score-bar-track"><div class="score-bar-fill" style="width:80%;"></div></div><div class="pct">0–20</div></div>
+              <div class="score-bar-row"><div class="label">Fit de tamaño de empresa</div><div class="score-bar-track"><div class="score-bar-fill" style="width:80%;"></div></div><div class="pct">0–20</div></div>
+              <div class="score-bar-row"><div class="label">Fit del job declarado</div><div class="score-bar-track"><div class="score-bar-fill" style="width:80%;"></div></div><div class="pct">0–20</div></div>
+              <div class="score-bar-row"><div class="label">Fit industria / caso de uso</div><div class="score-bar-track"><div class="score-bar-fill" style="width:60%;"></div></div><div class="pct">0–15</div></div>
+              <div class="score-bar-row"><div class="label">Madurez operativa</div><div class="score-bar-track"><div class="score-bar-fill" style="width:60%;"></div></div><div class="pct">0–15</div></div>
+              <div class="score-bar-row"><div class="label">Completitud de datos</div><div class="score-bar-track"><div class="score-bar-fill" style="width:40%;"></div></div><div class="pct">0–10</div></div>
+            </div>
+            <p class="desc" style="margin-top:10px;">Nunca se infieren atributos protegidos sensibles. Fit no es Intent.</p>
+          </div>
+          <div class="card">
+            <span class="tag">§15</span>
+            <h3 class="card-title" style="margin-top:8px;">Intent Score — con decaimiento temporal</h3>
+            <p class="desc" style="margin-bottom:10px;">¿Qué tan fuerte y reciente es el interés demostrado?</p>
+            <div class="code" style="font-size:11.5px;">Intent(t) = Σ(event_weight × decay(age))</div>
+            <div class="chip-row" style="margin-top:12px;">
+              <span class="chip">pricing_view +12</span><span class="chip">pricing_revisit +18</span>
+              <span class="chip">first_value_event +25</span><span class="chip">sales_contact_request +30</span>
+              <span class="chip">session_abandon −5</span>
+            </div>
+            <p class="desc" style="margin-top:10px;">Los pesos viven en configuración — nunca hardcodeados.</p>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§16</span> Modelos de propensity (MVP 2)</h2>
+        <div class="chip-row reveal" style="margin-bottom:14px;">
+          <span class="chip">P(Activation en 7d)</span><span class="chip">P(MQL en 14d)</span><span class="chip">P(SQL en 30d)</span>
+          <span class="chip">P(Paid en 30d)</span><span class="chip">P(Dropout en 24h)</span><span class="chip">P(Reactivation en 30d)</span><span class="chip">P(Upsell en 60d)</span>
+        </div>
+        <p class="desc reveal" style="max-width:680px;">Baselines interpretables primero — Logistic Regression, Gradient Boosted Trees solo si el baseline lo justifica. Nunca deep learning como punto de partida.</p>
+
+        <h2 class="section-title reveal"><span class="n">§18</span> Next Best Action Engine</h2>
+        <div class="card reveal">
+          <div class="code">Action Score =
+  ExpectedProgressionValue
+  × Confidence
+  × Urgency
+  × CustomerRelevance
+  − ContactFatiguePenalty
+  − CostPenalty
+  − RiskPenalty</div>
+          <p class="desc" style="margin-top:12px;">"No action" es una acción válida. Se prefiere la intervención más simple con probabilidad de avanzar al usuario — el LLM genera contenido pero nunca se salta la política.</p>
+        </div>
+        <div class="chip-row reveal" style="margin-top:14px;">
+          <span class="chip">NO_ACTION</span><span class="chip">EDUCATE</span><span class="chip">ONBOARDING_RESCUE</span><span class="chip">FIRST_VALUE_MISSION</span>
+          <span class="chip">NURTURE</span><span class="chip">SALES_HANDOFF</span><span class="chip">FEATURE_ADOPTION</span><span class="chip">REENGAGE</span>
+          <span class="chip">HUMAN_SUPPORT</span><span class="chip">SUPPRESS_CONTACT</span>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§19</span> Decision API — ejemplo</h2>
+        <div class="code reveal">{
+  <span class="k">"customer_id"</span>: <span class="c">"cus_123"</span>,
+  <span class="k">"lifecycle_state"</span>: <span class="c">"DROPOUT_RISK"</span>,
+  <span class="k">"scores"</span>: { <span class="k">"fit"</span>: 72, <span class="k">"intent"</span>: 68, <span class="k">"dropout_propensity"</span>: 0.78 },
+  <span class="k">"frictions"</span>: [{ <span class="k">"type"</span>: <span class="c">"SETUP_FRICTION"</span>, <span class="k">"confidence"</span>: 0.84 }],
+  <span class="k">"decision"</span>: {
+    <span class="k">"action"</span>: <span class="c">"ONBOARDING_RESCUE"</span>,
+    <span class="k">"channel"</span>: <span class="c">"WHATSAPP"</span>,
+    <span class="k">"why_now"</span>: <span class="c">"Intentos repetidos de configuración seguidos de inactividad"</span>,
+    <span class="k">"reason_codes"</span>: [<span class="c">"REPEAT_SETUP_ERROR"</span>, <span class="c">"HIGH_DROPOUT_RISK"</span>, <span class="c">"HIGH_INTENT"</span>],
+    <span class="k">"confidence"</span>: 0.82,
+    <span class="k">"requires_approval"</span>: false
+  }
+}</div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="flow"><span class="lab">Anterior</span>← Lifecycle &amp; Eventos</button>
+          <button class="nav-btn" data-goto="agents"><span class="lab">Siguiente</span>Agentes &amp; GenAI →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 04 AGENTS ===================== -->
+      <section class="tab-panel" id="panel-agents">
+        <div class="eyebrow reveal">04 · Agentes, GenAI &amp; guardrails</div>
+        <h1 class="page-title reveal">Un orquestador primero.<br><em>Multiagente</em> solo cuando la complejidad lo justifica.</h1>
+        <p class="lede reveal">No se construye un agente solo para renombrar una función de Python.</p>
+
+        <div class="diagram reveal">
+          <pre class="mermaid">
+graph LR
+  A["Observe context"] --> B["Validate policy"]
+  B --> C["Get state"]
+  C --> D["Get scores"]
+  D --> E["Detect friction"]
+  E --> F["Build candidate actions"]
+  F --> G["Rank actions"]
+  G --> H["Generate content"]
+  H --> I["Request approval"]
+  I --> J["Execute via adapter"]
+  J --> K["Record intervention"]
+  K --> L["Wait for outcome"]
+  L --> M["Learn / update"]
+          </pre>
+          <div class="diagram-cap">FIG. 05 — §23 Ciclo del Journey Orchestrator (MVP 3)</div>
+        </div>
+
+        <div class="grid grid-2 reveal" style="align-items:start;">
+          <div class="card">
+            <h3 class="card-title">§20 Buenos usos del LLM</h3>
+            <div class="checklist" style="grid-template-columns:1fr;margin-top:8px;">
+              <div class="check-item"><span class="box"></span>Resumir contexto del cliente</div>
+              <div class="check-item"><span class="box"></span>Clasificar intención en texto libre</div>
+              <div class="check-item"><span class="box"></span>Generar variantes de email/WhatsApp/in-app</div>
+              <div class="check-item"><span class="box"></span>Explicar por qué un lead está listo</div>
+              <div class="check-item"><span class="box"></span>Sintetizar insights de Growth</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card-title">§20 Malos usos del LLM</h3>
+            <div class="checklist" style="grid-template-columns:1fr;margin-top:8px;">
+              <div class="check-item"><span class="box"></span>Sumar MRR o calcular CAC</div>
+              <div class="check-item"><span class="box"></span>Calcular pesos de score determinísticos</div>
+              <div class="check-item"><span class="box"></span>Hacer cumplir el consentimiento</div>
+              <div class="check-item"><span class="box"></span>Decidir obligaciones regulatorias</div>
+              <div class="check-item"><span class="box"></span>Ejecutar acciones financieras irreversibles</div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§22</span> Guardrails de marca — antes / después</h2>
+        <div class="grid grid-2 reveal">
+          <div class="card" style="border-color:#EEC7C7;background:#FFF9F9;">
+            <span class="tag red">Evitar</span>
+            <p class="desc" style="margin-top:10px;font-style:italic;">"¡Última oportunidad! Activa ya o perderás todos los beneficios."</p>
+          </div>
+          <div class="card" style="border-color:rgba(0,177,157,.4);background:var(--mist);">
+            <span class="tag">Mejor</span>
+            <p class="desc" style="margin-top:10px;font-style:italic;">"Ya empezaste la configuración. Puedes retomarla desde el último paso y completar tu primera factura sin empezar de cero."</p>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§27</span> Human-in-the-Loop</h2>
+        <div class="levels reveal">
+          <div class="level"><div class="lv-num">NIVEL 1</div><p>Recommend — sin aprobación: insight, score, acción sugerida, borrador de mensaje.</p></div>
+          <div class="level"><div class="lv-num">NIVEL 2</div><p>Prepare + Approve — outreach sensible de Sales, ofertas comerciales, comunicación de alto impacto.</p></div>
+          <div class="level is-mvp"><div class="lv-num">NIVEL 3</div><p>Auto within Policy — email de bajo riesgo, guía in-app, clasificación interna.</p><span class="tag mvp-badge">MVP objetivo</span></div>
+          <div class="level"><div class="lv-num">NIVEL 4</div><p>Autonomous — fuera de alcance salvo simulación reversible de bajo riesgo.</p></div>
+          <div class="level never"><div class="lv-num">NUNCA</div><p>Mover dinero, borrar datos, obligaciones fiscales, aprobación de crédito, cambio de contrato.</p></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§24 · §26</span> Tool Registry &amp; adapters</h2>
+        <div class="chip-row reveal">
+          <span class="chip">get_customer_context</span><span class="chip">calculate_fit_score</span><span class="chip">calculate_intent_score</span>
+          <span class="chip">detect_friction</span><span class="chip">rank_next_best_action</span><span class="chip">generate_message</span>
+          <span class="chip">simulate_send_message</span><span class="chip">record_intervention</span><span class="chip">record_outcome</span>
+        </div>
+        <p class="desc reveal" style="margin-top:10px;">Todas las herramientas externas soportan una implementación mock/sandbox — para MVP 0, todo write se simula y se marca <b style="color:var(--primary-dark);">SIMULATED</b> en la UI.</p>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="scoring"><span class="lab">Anterior</span>← Scoring &amp; Decisión</button>
+          <button class="nav-btn" data-goto="roadmap"><span class="lab">Siguiente</span>Roadmap &amp; Equipo →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 05 ROADMAP ===================== -->
+      <section class="tab-panel" id="panel-roadmap">
+        <div class="eyebrow reveal">05 · Roadmap &amp; equipos paralelos</div>
+        <h1 class="page-title reveal">Cuatro milestones. <em>Un slice vertical</em> antes de dashboards o agentes.</h1>
+
+        <h2 class="section-title reveal" style="margin-top:0;"><span class="n">§6</span> Milestones de desarrollo</h2>
+        <div class="reveal">
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">0</div><div class="phase-body"><h4>MVP 0 — Prototype / Foundation</h4><p class="desc">Dataset sintético, taxonomía de eventos, state machine, Customer 360, Fit/Intent, Pre-MQL por reglas, rescue de onboarding, mensaje contextual, envío simulado, dashboard, audit trail.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">1</div><div class="phase-body"><h4>MVP 1 — Lifecycle Engine</h4><p class="desc">Progressive profiling, 3–5 arquetipos de journey, historial de transición, reglas Pre-MQL→MQL, políticas de frecuencia, control/tratamiento, journey analytics.</p></div></div>
+          <div class="phase-row"><div class="rail-line"></div><div class="phase-dot">2</div><div class="phase-body"><h4>MVP 2 — Predictive Growth</h4><p class="desc">Modelos de propensity, ranking NBA básico, reason codes de modelo, calibration monitoring, champion/challenger, Next Best Channel, alertas de anomalías.</p></div></div>
+          <div class="phase-row"><div class="phase-dot">3</div><div class="phase-body"><h4>MVP 3 — Agentic Expansion</h4><p class="desc">Journey Orchestrator, Content Agent, Growth Insight Agent, MCP read-context adapter, approval queue, agent run trace, closed-loop feedback.</p></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§59</span> Workstreams paralelos</h2>
+        <p class="desc reveal" style="margin-bottom:16px;">Todos los agentes usan los mismos contratos y evitan cambios en conflicto. Antes de desarrollar en paralelo se congelan: event schema, lifecycle enums, decision API response, intervention schema y adapter protocols.</p>
+        <div class="grid grid-3 reveal">
+          <div class="owner-card">
+            <div class="owner-tag">Workstream A</div>
+            <h3>Claude</h3>
+            <p class="desc" style="margin-bottom:10px;">Product · Domain · Architecture</p>
+            <ul>
+              <li>Vocabulario del dominio</li>
+              <li>State machine</li>
+              <li>Contratos de decisión</li>
+              <li>Reglas de política</li>
+              <li>Docs de arquitectura</li>
+              <li>Esquemas de API</li>
+            </ul>
+            <div class="deliverable">→ Domain vocabulary + decision contracts + ADRs</div>
+          </div>
+          <div class="owner-card">
+            <div class="owner-tag">Workstream B</div>
+            <h3>Codex</h3>
+            <p class="desc" style="margin-bottom:10px;">Backend · Data · ML</p>
+            <ul>
+              <li>FastAPI</li>
+              <li>Base de datos</li>
+              <li>Ingestion</li>
+              <li>Scoring</li>
+              <li>Métricas</li>
+              <li>Generador sintético · baseline ML · tests</li>
+            </ul>
+            <div class="deliverable">→ Seed → score → decision API</div>
+          </div>
+          <div class="owner-card">
+            <div class="owner-tag">Workstream C</div>
+            <h3>Antigravity</h3>
+            <p class="desc" style="margin-bottom:10px;">Frontend · Demo · UX</p>
+            <ul>
+              <li>Next.js app</li>
+              <li>Sistema de marca</li>
+              <li>Customer 360</li>
+              <li>Decision Lab</li>
+              <li>Lifecycle dashboard</li>
+              <li>UI de experimentos · demo E2E</li>
+            </ul>
+            <div class="deliverable">→ UI navegable con Customer 360 + Decision Lab</div>
+          </div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§58</span> Backlog inicial — por prioridad</h2>
+        <table class="spec-table reveal">
+          <tr><th>Prioridad</th><th>Alcance</th></tr>
+          <tr><td>P0 — Foundation</td><td>Repo scaffolding, Docker Compose, Postgres, API health, migrations, generador sintético, brand tokens.</td></tr>
+          <tr><td>P0 — Domain</td><td>Event models, ingestion, customer model, state machine, contact policy, audit log.</td></tr>
+          <tr><td>P0 — Decisioning</td><td>Fit Score, Intent Score, friction detection, candidate actions, NBA heurístico, reason codes.</td></tr>
+          <tr><td>P0 — Demo</td><td>Escenario Laura, Customer 360, Decision Lab, intervención simulada, actualización de outcome.</td></tr>
+          <tr><td>P1 — Growth</td><td>Métricas de funnel/lifecycle, framework de experimentos, Pre-MQL/MQL, handoff de ventas simulado.</td></tr>
+          <tr><td>P1 — GenAI</td><td>Abstracción de proveedor, mock provider, salida estructurada, prompt registry.</td></tr>
+          <tr><td>P2 — ML</td><td>Feature pipeline, labels sintéticos de propensity, baseline model, calibración, monitor.</td></tr>
+          <tr><td>P2 — Agentic</td><td>Orquestador, tool registry, run trace, mock MCP read adapter, approval queue.</td></tr>
+        </table>
+
+        <h2 class="section-title reveal"><span class="n">§60</span> ADRs requeridos</h2>
+        <div class="chip-row reveal">
+          <span class="chip">ADR-001 Modular monolith vs microservices</span><span class="chip">ADR-002 Rules-first decisioning</span>
+          <span class="chip">ADR-003 LLM provider abstraction</span><span class="chip">ADR-004 Simulation-first adapters</span>
+          <span class="chip">ADR-005 One orchestrator before multi-agent</span><span class="chip">ADR-006 MCP para contexto, APIs para acción</span>
+          <span class="chip">ADR-007 Synthetic-first data</span><span class="chip">ADR-008 Policy engine overrides AI</span>
+        </div>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="agents"><span class="lab">Anterior</span>← Agentes &amp; GenAI</button>
+          <button class="nav-btn" data-goto="metrics"><span class="lab">Siguiente</span>Métricas &amp; Demo →</button>
+        </div>
+      </section>
+
+      <!-- ===================== 06 METRICS ===================== -->
+      <section class="tab-panel" id="panel-metrics">
+        <div class="eyebrow reveal">06 · Métricas, demo &amp; criterio de éxito</div>
+        <h1 class="page-title reveal">"Puedo ver exactamente <em>por qué</em> el sistema decidió lo que decidió."</h1>
+
+        <h2 class="section-title reveal" style="margin-top:0;"><span class="n">§32</span> Cinco personas de demo</h2>
+        <div class="grid grid-2 reveal">
+          <div class="persona-card">
+            <div class="p-head"><h3>A · Laura — Colombia</h3><span class="tag">High Intent / Blocked</span></div>
+            <div class="p-signals">
+              <div>Signup completo, múltiples vistas de pricing</div>
+              <div>Onboarding iniciado, error de configuración repetido</div>
+              <div>Sesión abandonada — alto intent, alto riesgo de dropout</div>
+            </div>
+            <div class="p-action">→ ONBOARDING_RESCUE · "No está fría; está bloqueada."</div>
+          </div>
+          <div class="persona-card">
+            <div class="p-head"><h3>B · Good Fit / Low Urgency</h3><span class="tag muted">Nurture</span></div>
+            <div class="p-signals">
+              <div>Perfil objetivo, pocas interacciones de producto</div>
+              <div>Engagement con contenido educativo</div>
+              <div>Ningún value event</div>
+            </div>
+            <div class="p-action">→ NURTURE / EDUCATE · sin handoff a Sales</div>
+          </div>
+          <div class="persona-card">
+            <div class="p-head"><h3>C · Activated / Under-qualified</h3><span class="tag">Behavior &gt; Profile</span></div>
+            <div class="p-signals">
+              <div>Fit firmográfico medio</div>
+              <div>Uso de producto fuerte, múltiples value events</div>
+              <div>Un score estático perdería a este lead</div>
+            </div>
+            <div class="p-action">→ PRE_MQL / MQL · el comportamiento pesa más que el perfil declarado</div>
+          </div>
+          <div class="persona-card">
+            <div class="p-head"><h3>D · Sales Ready</h3><span class="tag">High Paid Propensity</span></div>
+            <div class="p-signals">
+              <div>Fit alto, pricing revisitado repetidamente</div>
+              <div>Onboarding completo, value events</div>
+              <div>Propensity de pago alta</div>
+            </div>
+            <div class="p-action">→ SALES_HANDOFF · con reason codes y talk track sugerido</div>
+          </div>
+        </div>
+        <div class="persona-card reveal" style="margin-top:14px;max-width:500px;">
+          <div class="p-head"><h3>E · Dormant / Reactivable</h3><span class="tag muted">Reengage</span></div>
+          <div class="p-signals">
+            <div>Previamente activado, valor histórico significativo</div>
+            <div>45+ días inactivo, sin supresión</div>
+            <div>Perfil de reactivación positivo</div>
+          </div>
+          <div class="p-action">→ REENGAGE · el mensaje referencia historial útil, no un genérico "te extrañamos"</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§49</span> Guion de demo — 7 minutos</h2>
+        <div class="reveal">
+          <div class="scene"><div class="sc-n">MIN 0–1</div><div><h4>Problema</h4><p>La misma etapa de Sign Up contiene usuarios con intent y fricción muy distintos.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 1–2</div><div><h4>Laura</h4><p>Customer 360: pricing, retry de onboarding, error de setup, inactividad, alto intent, riesgo de dropout.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 2–3</div><div><h4>Decisión</h4><p>Lifecycle: DROPOUT_RISK · Friction: SETUP_FRICTION · Action: ONBOARDING_RESCUE vía WhatsApp — bloqueada, no fría.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 3–4</div><div><h4>GenAI</h4><p>Mensaje contextual generado — contexto de entrada, política de marca, salida estructurada, CTA.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 4–5</div><div><h4>Acción simulada</h4><p>"Simulate Send" — se muestra el intervention log.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 5–6</div><div><h4>Outcome</h4><p>Se simulan onboarding_completed y first_invoice_issued — progresión de estado visible.</p></div></div>
+          <div class="scene"><div class="sc-n">MIN 6–7</div><div><h4>Revenue logic</h4><p>El objetivo no son más mensajes: es progresión medible, Sign Up → Activation → MQL → SQL → Paid.</p></div></div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§43</span> Acceptance criteria — MVP 0</h2>
+        <div class="checklist reveal">
+          <div class="check-item"><span class="box"></span>docker compose up levanta web, API y base de datos</div>
+          <div class="check-item"><span class="box"></span>Seed sintético desde un solo comando</div>
+          <div class="check-item"><span class="box"></span>Contrato canónico de eventos, ingestión idempotente</div>
+          <div class="check-item"><span class="box"></span>5 personas de demo deterministas</div>
+          <div class="check-item"><span class="box"></span>State machine funciona y es auditable</div>
+          <div class="check-item"><span class="box"></span>Fit Score e Intent Score con decaimiento temporal</div>
+          <div class="check-item"><span class="box"></span>Scores exponen reason codes, umbrales configurables</div>
+          <div class="check-item"><span class="box"></span>Detecta Knowledge, Setup, Value y Timing friction</div>
+          <div class="check-item"><span class="box"></span>NBA engine explica why_now y respeta contact policy</div>
+          <div class="check-item"><span class="box"></span>Mock provider de GenAI funciona sin API key externa</div>
+          <div class="check-item"><span class="box"></span>Adapters de Email/WhatsApp/in-app en modo simulado</div>
+          <div class="check-item"><span class="box"></span>Experimento control/treatment con asignación determinista</div>
+          <div class="check-item"><span class="box"></span>Dashboard ejecutivo, funnel, Customer 360, Decision Lab</div>
+          <div class="check-item"><span class="box"></span>Tests unitarios + un flujo E2E de demo pasan</div>
+        </div>
+
+        <h2 class="section-title reveal"><span class="n">§62</span> Limitaciones — deben quedar explícitas en el repo</h2>
+        <div class="chip-row reveal">
+          <span class="chip">Datos sintéticos salvo reemplazo explícito</span><span class="chip">Business case ilustrativo</span>
+          <span class="chip">Integraciones CRM/mensajería/Alegra son mock</span><span class="chip">No decide temas fiscales, de crédito o financieros</span>
+          <span class="chip">Calidad de ML en datos sintéticos ≠ calidad en producción</span><span class="chip">Requiere revisión de privacidad/legal/seguridad para producción</span>
+        </div>
+
+        <div class="quote reveal" style="margin-top:36px;">"Puedo ver exactamente cómo el sistema detecta que un lead está bloqueado o listo, por qué elige una intervención específica, cómo se ejecuta con seguridad, y cómo mediríamos si generó progresión real de lifecycle o Revenue."
+          <span>DEFINICIÓN FINAL DE ÉXITO — §64</span>
+        </div>
+        <p class="desc reveal" style="margin-top:14px;font-family:var(--font-mono);font-size:12px;color:var(--primary-dark);letter-spacing:.02em;">GO — START NARROW, LEARN FAST, SCALE WHAT MOVES REVENUE.</p>
+
+        <div class="panel-nav reveal">
+          <button class="nav-btn" data-goto="roadmap"><span class="lab">Anterior</span>← Roadmap &amp; Equipo</button>
+          <button class="nav-btn" data-goto="overview"><span class="lab">Volver al inicio</span>Tesis &amp; Problema →</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad:false,
+  theme:'base',
+  securityLevel:'loose',
+  themeVariables:{
+    background:'#FFFFFF',
+    primaryColor:'#F3FBFA',
+    primaryTextColor:'#1F2933',
+    primaryBorderColor:'#00B19D',
+    lineColor:'#667085',
+    secondaryColor:'#DFF7F3',
+    tertiaryColor:'#F7F9FA',
+    fontFamily:'JetBrains Mono, monospace',
+    fontSize:'12px',
+    edgeLabelBackground:'#FFFFFF',
+    clusterBkg:'#F3FBFA',
+    clusterBorder:'#00B19D'
+  },
+  flowchart:{curve:'basis', htmlLabels:true},
+  stateDiagram:{ }
+});
+
+const tabs = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.tab-panel');
+const renderedDiagrams = new WeakSet();
+
+function activateTab(id){
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  panels.forEach(p=>{
+    const isTarget = p.id === 'panel-'+id;
+    p.classList.toggle('active', isTarget);
+  });
+  const panel = document.getElementById('panel-'+id);
+  panel.scrollTop = 0;
+
+  const diagrams = panel.querySelectorAll('.mermaid');
+  diagrams.forEach(async (el)=>{
+    if(!renderedDiagrams.has(el)){
+      renderedDiagrams.add(el);
+      try{
+        const code = el.textContent;
+        const mid = 'm'+Math.random().toString(36).slice(2,9);
+        const {svg} = await mermaid.render(mid, code);
+        el.innerHTML = svg;
+      }catch(e){ console.error(e); }
+    }
+  });
+
+  const items = panel.querySelectorAll('.reveal');
+  items.forEach(el=>el.classList.remove('shown'));
+  requestAnimationFrame(()=>{
+    items.forEach((el,i)=>{
+      el.style.transitionDelay = Math.min(i*45,600)+'ms';
+      requestAnimationFrame(()=>el.classList.add('shown'));
+    });
+  });
+}
+
+tabs.forEach(btn=>{
+  btn.addEventListener('click', ()=>activateTab(btn.dataset.tab));
+});
+document.querySelectorAll('[data-goto]').forEach(btn=>{
+  btn.addEventListener('click', ()=>activateTab(btn.dataset.goto));
+});
+
+activateTab('overview');
+</script>
+</body>
+</html>
