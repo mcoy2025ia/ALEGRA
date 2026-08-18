@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Sistema%20de%20Inteligencia%20Contractual%20y%20Evidencia%20para%20Seguros%20de%20Vehiculos%20Pesados.pdf" }
+  ]
+}

@@ -112,6 +112,32 @@ h1 em{color:var(--teal);font-style:normal;}
   margin-bottom:52px;
 }
 .byline strong{color:var(--teal-soft);font-weight:600;}
+.section{
+  width:100%;
+  max-width:920px;
+  margin-bottom:52px;
+}
+.section:last-child{margin-bottom:0;}
+.section-head{
+  text-align:left;
+  margin-bottom:20px;
+}
+.section-label{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;
+  color:var(--text-faint);text-transform:uppercase;margin-bottom:6px;
+}
+.section-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:19px;
+  margin-bottom:6px;
+}
+.section-desc{
+  color:var(--text-dim);
+  font-size:13.5px;
+  line-height:1.55;
+  max-width:640px;
+}
 .cards{
   width:100%;
   max-width:920px;
@@ -119,9 +145,11 @@ h1 em{color:var(--teal);font-style:normal;}
   grid-template-columns:1fr 1fr;
   gap:22px;
 }
+.cards.single{grid-template-columns:1fr;max-width:460px;}
 @media (max-width:720px){
   .cards{grid-template-columns:1fr;}
 }
+.card-actions.full{grid-template-columns:1fr;}
 .card{
   position:relative;
   text-align:left;
@@ -138,6 +166,7 @@ h1 em{color:var(--teal);font-style:normal;}
   font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;
   color:var(--teal);text-transform:uppercase;margin-bottom:10px;
 }
+.card-tag.amber{color:var(--amber);}
 .card h2{
   font-family:var(--font-display);
   font-weight:600;
@@ -204,36 +233,62 @@ footer{
   <p class="lede">Elige una propuesta para ver la ruta de desarrollo interactiva o descargar el PDF ejecutivo.</p>
   <p class="byline">Preparado por <strong>Manuel Alberto Coy Benavides</strong> para los procesos de selección de Alegra.</p>
 
-  <div class="cards">
-    <div class="card">
-      <div class="card-tag">Growth Autopilot</div>
-      <h2>Growth Strategist Pymes</h2>
-      <p>Detecta oportunidades y riesgos del negocio, recomienda la siguiente mejor acción y la ejecuta con control humano.</p>
-      <div class="card-actions">
-        <a class="btn btn-primary" href="https://alegra-growth-autopilot.vercel.app/" target="_blank" rel="noopener">
-          <img class="btn-thumb" src="assets/growth-page-thumb.jpg" alt="Vista previa de la página Growth Autopilot" loading="lazy">
-          <span class="btn-label">Ver página</span>
-        </a>
-        <a class="btn btn-ghost" href="https://alegra-growth-autopilot.vercel.app/ALEGRA_PYME-Growth_Autopilot.pdf" target="_blank" rel="noopener">
-          <img class="btn-thumb" src="assets/growth-pdf-thumb.jpg" alt="Vista previa del PDF Growth Autopilot" loading="lazy">
-          <span class="btn-label">Ver PDF</span>
-        </a>
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">Candidatura Alegra</div>
+      <div class="section-title">Propuestas para el proceso de selección</div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-tag">Growth Autopilot</div>
+        <h2>Growth Strategist Pymes</h2>
+        <p>Detecta oportunidades y riesgos del negocio, recomienda la siguiente mejor acción y la ejecuta con control humano.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="https://alegra-growth-autopilot.vercel.app/" target="_blank" rel="noopener">
+            <img class="btn-thumb" src="assets/growth-page-thumb.jpg" alt="Vista previa de la página Growth Autopilot" loading="lazy">
+            <span class="btn-label">Ver página</span>
+          </a>
+          <a class="btn btn-ghost" href="https://alegra-growth-autopilot.vercel.app/ALEGRA_PYME-Growth_Autopilot.pdf" target="_blank" rel="noopener">
+            <img class="btn-thumb" src="assets/growth-pdf-thumb.jpg" alt="Vista previa del PDF Growth Autopilot" loading="lazy">
+            <span class="btn-label">Ver PDF</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag">Lifecycle Autopilot</div>
+        <h2>Lifecycle &amp; Automation Marketing Leader</h2>
+        <p>Orquesta la comunicación con el cliente durante todo su ciclo de vida: onboarding, activación, retención y reactivación.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="https://alegra-lifecycle-autopilot.vercel.app/" target="_blank" rel="noopener">
+            <img class="btn-thumb" src="assets/lifecycle-page-thumb.jpg" alt="Vista previa de la página Lifecycle Autopilot" loading="lazy">
+            <span class="btn-label">Ver página</span>
+          </a>
+          <a class="btn btn-ghost" href="https://alegra-lifecycle-autopilot.vercel.app/ALEGRA_PYME-Lifecycle_Autopilot.pdf" target="_blank" rel="noopener">
+            <img class="btn-thumb" src="assets/lifecycle-pdf-thumb.jpg" alt="Vista previa del PDF Lifecycle Autopilot" loading="lazy">
+            <span class="btn-label">Ver PDF</span>
+          </a>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="card">
-      <div class="card-tag">Lifecycle Autopilot</div>
-      <h2>Lifecycle &amp; Automation Marketing Leader</h2>
-      <p>Orquesta la comunicación con el cliente durante todo su ciclo de vida: onboarding, activación, retención y reactivación.</p>
-      <div class="card-actions">
-        <a class="btn btn-primary" href="https://alegra-lifecycle-autopilot.vercel.app/" target="_blank" rel="noopener">
-          <img class="btn-thumb" src="assets/lifecycle-page-thumb.jpg" alt="Vista previa de la página Lifecycle Autopilot" loading="lazy">
-          <span class="btn-label">Ver página</span>
-        </a>
-        <a class="btn btn-ghost" href="https://alegra-lifecycle-autopilot.vercel.app/ALEGRA_PYME-Lifecycle_Autopilot.pdf" target="_blank" rel="noopener">
-          <img class="btn-thumb" src="assets/lifecycle-pdf-thumb.jpg" alt="Vista previa del PDF Lifecycle Autopilot" loading="lazy">
-          <span class="btn-label">Ver PDF</span>
-        </a>
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">Proyecto real de cliente</div>
+      <div class="section-title">Caso entregado a un cliente de intermediación de seguros</div>
+      <p class="section-desc">Sistema de IA construido para un intermediario de seguros, enfocado en pólizas todo riesgo del ramo de vehículos pesados. A diferencia de las propuestas anteriores, este es un proyecto real ya desarrollado y entregado, no una candidatura.</p>
+    </div>
+    <div class="cards single">
+      <div class="card">
+        <div class="card-tag amber">Cotizador IA · Vehículos Pesados</div>
+        <h2>Inteligencia Contractual y Evidencia para Seguros</h2>
+        <p>Analiza pólizas todo riesgo, contratos y evidencia documental del ramo de vehículos pesados para agilizar la cotización y reducir el riesgo de errores en la intermediación.</p>
+        <div class="card-actions full">
+          <a class="btn btn-primary" href="https://alegra-cotizador-ia-vehiculos-pesad.vercel.app/" target="_blank" rel="noopener">
+            <span class="btn-label">Ver PDF</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>

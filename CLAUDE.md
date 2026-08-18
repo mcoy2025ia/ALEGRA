@@ -7,11 +7,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **not a software application** — it's a folder of client-facing sales/proposal deliverables prepared for Alegra (a PYME/SMB business platform). It has no build system, package manager, git repo, or test suite. There is exactly one piece of "code": a self-contained HTML presentation.
 
 Contents:
+- `index.html` — root hub page linking all proposals/projects (see "The hub page" below). Deployed as its own Vercel project (`alegra`).
 - `Growth Autopilot/ALEGRA_PYME-Growth_Autopilot.pdf` — exported PDF version of the Growth Autopilot proposal.
-- `Growth Autopilot/growth-autopilot-roadmap.html` — the interactive, single-file HTML source for that proposal (open directly in a browser; no server or build step required).
-- `Lifecycle Autopilot/ALEGRA_PYME-Lifecycle_Autopilot.pdf` — PDF proposal for a separate "Lifecycle Autopilot" concept. No HTML source currently exists for this one.
+- `Growth Autopilot/growth-autopilot-roadmap.html` — the interactive, single-file HTML source for that proposal (open directly in a browser; no server or build step required). Deployed as its own Vercel project (`alegra-growth-autopilot`), with `vercel.json` rewriting `/` to this file.
+- `Lifecycle Autopilot/ALEGRA_PYME-Lifecycle_Autopilot.pdf` — PDF proposal for a separate "Lifecycle Autopilot" concept.
+- `Lifecycle Autopilot/lifecycle-autopilot-roadmap.html` — interactive HTML source, same pattern as Growth Autopilot. Deployed as its own Vercel project (`alegra-lifecycle-autopilot`), with `vercel.json` rewriting `/` to this file.
+- `Cotizador IA Vehiculos Pesados/Sistema de Inteligencia Contractual y Evidencia para Seguros de Vehiculos Pesados.pdf` — PDF for a **real, already-delivered client project** (not an Alegra candidacy proposal): an AI system built for an insurance intermediary client, covering all-risk policies in the heavy-vehicle line. No HTML source exists for this one — PDF only. Deployed as its own Vercel project (`alegra-cotizador-ia-vehiculos-pesados`), with `vercel.json` rewriting `/` to the PDF.
 
-Both proposals pitch an AI-first system for PYMEs that follows a **Detect → Understand → Recommend → Act → Measure → Learn** loop: surfacing business signals (sales drops, inactive customers, overdue receivables, churn risk, unattended leads, repurchase propensity) and turning them into human-approved automated actions.
+The two Alegra proposals (Growth Autopilot, Lifecycle Autopilot) pitch an AI-first system for PYMEs that follows a **Detect → Understand → Recommend → Act → Measure → Learn** loop: surfacing business signals (sales drops, inactive customers, overdue receivables, churn risk, unattended leads, repurchase propensity) and turning them into human-approved automated actions. The Cotizador IA project is a distinct, separately-scoped real-world deliverable and does not follow this loop structure.
+
+## Deployment architecture
+
+Each folder (`Growth Autopilot`, `Lifecycle Autopilot`, `Cotizador IA Vehiculos Pesados`) is linked to its **own separate Vercel project** under the same team (`team_xuZsmaSFFJlEiYy46IchOZi3`), deployed independently from that folder as the project root. The repo root (with `index.html`) is a fourth, separate Vercel project (`alegra`) that only hosts the hub page and links out to the other three projects' `.vercel.app` URLs. `.vercel/` directories are gitignored per-folder — never commit them.
+
+## The hub page (`index.html`)
+
+Single self-contained dark-themed page (same visual language/tokens as the roadmap HTML files) with two sections:
+- **"Candidatura Alegra"** — a two-card grid (`.cards`) for the Growth Autopilot and Lifecycle Autopilot proposals, each with "Ver página" (links to that project's deployed HTML) and "Ver PDF" buttons with thumbnail previews (`assets/*.jpg`).
+- **"Proyecto real de cliente"** — a single-card grid (`.cards.single`) for the Cotizador IA project, styled with the amber accent (`.card-tag.amber`) to visually distinguish a real delivered project from the Alegra proposals. Only a "Ver PDF" button since no interactive HTML exists for it.
+
+When adding a new proposal/project card, follow the existing pattern: a `.card` with `.card-tag`, `<h2>` job title or project name, description `<p>`, and `.card-actions` linking to that project's Vercel URL.
 
 ## Working with `growth-autopilot-roadmap.html`
 
