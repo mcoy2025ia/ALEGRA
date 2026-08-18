@@ -205,6 +205,48 @@ h1 em{color:var(--teal);font-style:normal;}
 .btn-primary:hover .btn-label{background:var(--teal-soft);color:#03110d;}
 .btn-ghost .btn-label{background:var(--panel-2);color:var(--text);}
 .btn-ghost:hover .btn-label{color:var(--teal);}
+.resource-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.resource-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 18px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--bg);
+}
+.resource-info{display:flex;flex-direction:column;gap:2px;}
+.resource-name{
+  font-family:var(--font-display);font-weight:600;font-size:14px;
+}
+.resource-desc{
+  font-family:var(--font-mono);font-size:11px;color:var(--text-faint);
+}
+.resource-link{
+  flex-shrink:0;
+  text-decoration:none;
+  font-family:var(--font-display);font-weight:600;font-size:12px;
+  color:#03110d;
+  background:var(--teal);
+  padding:8px 16px;
+  border-radius:8px;
+  transition:background .15s ease, transform .15s ease;
+}
+.resource-link:hover{background:var(--teal-soft);transform:translateY(-1px);}
+.resource-pending{
+  flex-shrink:0;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;
+  color:var(--text-faint);
+  text-transform:uppercase;
+  padding:8px 14px;
+  border:1px dashed var(--line-strong);
+  border-radius:8px;
+}
 footer{
   position:relative;z-index:1;
   text-align:center;
@@ -268,6 +310,41 @@ footer{
             <img class="btn-thumb" src="assets/lifecycle-pdf-thumb.jpg" alt="Vista previa del PDF Lifecycle Autopilot" loading="lazy">
             <span class="btn-label">Ver PDF</span>
           </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">Evidencia de la prueba</div>
+      <div class="section-title">Recursos del proceso de selección</div>
+      <p class="section-desc">Evidencia solicitada por la prueba de Alegra: escrito manual, video de presentación y video de habilidades en IA.</p>
+    </div>
+    <div class="cards single">
+      <div class="card">
+        <div class="resource-list">
+          <div class="resource-item">
+            <div class="resource-info">
+              <span class="resource-name">Escrito manual</span>
+              <span class="resource-desc">Respuestas de la prueba, hechas a mano</span>
+            </div>
+            <a class="resource-link" href="Recursos/Scanner.pdf" target="_blank" rel="noopener">Ver PDF</a>
+          </div>
+          <div class="resource-item">
+            <div class="resource-info">
+              <span class="resource-name">Video de presentación</span>
+              <span class="resource-desc">video_presentacion</span>
+            </div>
+            <span class="resource-pending">Próximamente</span>
+          </div>
+          <div class="resource-item">
+            <div class="resource-info">
+              <span class="resource-name">Video de habilidades IA</span>
+              <span class="resource-desc">Habilidades IA</span>
+            </div>
+            <span class="resource-pending">Próximamente</span>
+          </div>
         </div>
       </div>
     </div>
