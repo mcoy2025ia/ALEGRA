@@ -13,6 +13,12 @@ Contents:
 - `Lifecycle Autopilot/ALEGRA_PYME-Lifecycle_Autopilot.pdf` — PDF proposal for a separate "Lifecycle Autopilot" concept.
 - `Lifecycle Autopilot/lifecycle-autopilot-roadmap.html` — interactive HTML source, same pattern as Growth Autopilot. Deployed as its own Vercel project (`alegra-lifecycle-autopilot`), with `vercel.json` rewriting `/` to this file.
 - `Cotizador IA Vehiculos Pesados/Sistema de Inteligencia Contractual y Evidencia para Seguros de Vehiculos Pesados.pdf` — PDF for a **real, already-delivered client project** (not an Alegra candidacy proposal): an AI system built for an insurance intermediary client, covering all-risk policies in the heavy-vehicle line. No HTML source exists for this one — PDF only. Deployed as its own Vercel project (`alegra-cotizador-ia-vehiculos-pesados`), with `vercel.json` rewriting `/` to the PDF.
+- `Recursos/` — supporting evidence and source material linked from or feeding the hub page, not deployed as its own Vercel project:
+  - `Recursos/Scanner.pdf` — scanned handwritten answers to Alegra's selection-process test; linked directly from the hub's "Recursos del proceso de selección" section.
+  - `Recursos/Resumenes/*.png` — one summary image per project (Growth Autopilot, Lifecycle Autopilot, Cotizador IA), linked from the hub's "Resúmenes visuales" section for a quick-glance preview before opening the full page/PDF.
+  - `Recursos/Guion/*.md` — narration scripts (Spanish, timestamped cues like `[0:00 – 0:20 | ...]`) for the presentation/skills videos referenced in the hub's "Video de presentación" and "Video de habilidades IA" rows (currently marked "Próximamente" — not yet linked to actual video files).
+  - `Recursos/Videos/*.mp4` — recorded videos corresponding to those scripts. Gitignored (too large for GitHub's 100MB file limit) — never commit these. The three per-project case videos (`Caso Growth_Autopilot.mp4`, `Lifecycle_Autopilot.mp4`, `Caso Real.mp4`) are uploaded to a shared public Vercel Blob store (`alegra-videos`, connected to the `alegra-growth-autopilot` project) and linked with a "▶ Ver video del caso" button/link — in the HUD bar (`.hud-video`) for `growth-autopilot-roadmap.html` and `lifecycle-autopilot-roadmap.html`, and as a second card action on the Cotizador IA hub card in `index.html` (since that project has no interactive HTML page of its own). Blob URLs follow `https://ucp3rv9lzkub5ujs.public.blob.vercel-storage.com/videos/<name>.mp4`. To upload a new/replacement video: `vercel blob put <file> --pathname videos/<name>.mp4 --access public --multipart true --rw-token <token>` from within `Growth Autopilot/` (where the store is linked); the presentation/skills videos referenced above are not yet uploaded.
+- `Images/` — untracked staging folder of per-project images (`Growth.png`, `Lifecycle.png`, `Cotizador_IA.png`); not currently referenced from any HTML. Likely inputs for the `Recursos/Resumenes` images or a future card update — check with the user before assuming it's safe to delete or repurpose.
 
 The two Alegra proposals (Growth Autopilot, Lifecycle Autopilot) pitch an AI-first system for PYMEs that follows a **Detect → Understand → Recommend → Act → Measure → Learn** loop: surfacing business signals (sales drops, inactive customers, overdue receivables, churn risk, unattended leads, repurchase propensity) and turning them into human-approved automated actions. The Cotizador IA project is a distinct, separately-scoped real-world deliverable and does not follow this loop structure.
 
@@ -22,11 +28,13 @@ Each folder (`Growth Autopilot`, `Lifecycle Autopilot`, `Cotizador IA Vehiculos 
 
 ## The hub page (`index.html`)
 
-Single self-contained dark-themed page (same visual language/tokens as the roadmap HTML files) with two sections:
+Single self-contained dark-themed page (same visual language/tokens as the roadmap HTML files) with four sections, in order:
 - **"Candidatura Alegra"** — a two-card grid (`.cards`) for the Growth Autopilot and Lifecycle Autopilot proposals, each with "Ver página" (links to that project's deployed HTML) and "Ver PDF" buttons with thumbnail previews (`assets/*.jpg`).
+- **"Recursos del proceso de selección"** — a single-card grid (`.cards.single`) containing a `.resource-list` of `.resource-item` rows (handwritten test answers, presentation video, AI-skills video). Each row either links out via `.resource-link` (e.g. `Recursos/Scanner.pdf`) or shows a `.resource-pending` badge ("Próximamente") when the underlying file isn't wired up yet.
 - **"Proyecto real de cliente"** — a single-card grid (`.cards.single`) for the Cotizador IA project, styled with the amber accent (`.card-tag.amber`) to visually distinguish a real delivered project from the Alegra proposals. Only a "Ver PDF" button since no interactive HTML exists for it.
+- **"Resúmenes visuales"** — a three-card grid (`.cards.triple`) of `.summary-card` links, each a clickable thumbnail (`Recursos/Resumenes/*.png`) opening the full-size summary image in a new tab, one per project.
 
-When adding a new proposal/project card, follow the existing pattern: a `.card` with `.card-tag`, `<h2>` job title or project name, description `<p>`, and `.card-actions` linking to that project's Vercel URL.
+When adding a new proposal/project card, follow the existing pattern: a `.card` with `.card-tag`, `<h2>` job title or project name, description `<p>`, and `.card-actions` linking to that project's Vercel URL. When adding a resource row instead, follow the `.resource-item` pattern (name + description + link-or-pending badge).
 
 ## Working with `growth-autopilot-roadmap.html`
 

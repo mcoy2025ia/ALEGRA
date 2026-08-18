@@ -203,6 +203,10 @@ h1 em{color:var(--teal);font-style:normal;}
   flex:1;
 }
 .card-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.card-actions.triple{grid-template-columns:repeat(3,1fr);}
+@media (max-width:520px){
+  .card-actions.triple{grid-template-columns:1fr;}
+}
 .btn{
   position:relative;
   display:block;
@@ -358,7 +362,7 @@ footer{
               <span class="resource-name">Video de presentación</span>
               <span class="resource-desc">video_presentacion</span>
             </div>
-            <span class="resource-pending">Próximamente</span>
+            <a class="resource-link" href="https://ucp3rv9lzkub5ujs.public.blob.vercel-storage.com/videos/presentacion.mp4" target="_blank" rel="noopener">Ver video</a>
           </div>
           <div class="resource-item">
             <div class="resource-info">
@@ -383,10 +387,13 @@ footer{
         <div class="card-tag amber">Cotizador IA · Vehículos Pesados</div>
         <h2>Inteligencia Contractual y Evidencia para Seguros</h2>
         <p>Analiza pólizas todo riesgo, contratos y evidencia documental del ramo de vehículos pesados para agilizar la cotización y reducir el riesgo de errores en la intermediación.</p>
-        <div class="card-actions full">
+        <div class="card-actions">
           <a class="btn btn-primary" href="https://alegra-cotizador-ia-vehiculos-pesad.vercel.app/" target="_blank" rel="noopener">
             <img class="btn-thumb" src="assets/cotizador-pdf-thumb.png" alt="Vista previa del PDF Cotizador IA Vehículos Pesados" loading="lazy">
             <span class="btn-label">Ver PDF</span>
+          </a>
+          <a class="btn btn-ghost" href="https://ucp3rv9lzkub5ujs.public.blob.vercel-storage.com/videos/cotizador-ia-caso-real.mp4" target="_blank" rel="noopener">
+            <span class="btn-label" style="padding-top:40px;padding-bottom:40px;">▶ Ver video del caso</span>
           </a>
         </div>
       </div>
