@@ -146,10 +146,32 @@ h1 em{color:var(--teal);font-style:normal;}
   gap:22px;
 }
 .cards.single{grid-template-columns:1fr;max-width:460px;}
+.cards.triple{grid-template-columns:repeat(3,1fr);}
 @media (max-width:720px){
   .cards{grid-template-columns:1fr;}
+  .cards.triple{grid-template-columns:1fr;}
 }
 .card-actions.full{grid-template-columns:1fr;}
+.summary-card{
+  display:block;
+  text-decoration:none;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:linear-gradient(180deg, var(--panel), var(--panel-2));
+  transition:border-color .2s ease, transform .2s ease;
+}
+.summary-card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+.summary-thumb{
+  display:block;width:100%;height:160px;object-fit:cover;object-position:top center;
+}
+.summary-label{
+  display:block;
+  font-family:var(--font-display);font-weight:600;font-size:13px;
+  color:var(--text);
+  padding:12px 14px;
+  border-top:1px solid var(--line);
+}
 .card{
   position:relative;
   text-align:left;
@@ -368,6 +390,28 @@ footer{
           </a>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">Material visual</div>
+      <div class="section-title">Resúmenes visuales</div>
+      <p class="section-desc">Una imagen de resumen por proyecto para una revisión rápida antes de entrar al detalle.</p>
+    </div>
+    <div class="cards triple">
+      <a class="summary-card" href="Recursos/Resumenes/Growth%20Autopilot.png" target="_blank" rel="noopener">
+        <img class="summary-thumb" src="Recursos/Resumenes/Growth%20Autopilot.png" alt="Resumen visual de Growth Autopilot" loading="lazy">
+        <span class="summary-label">Growth Autopilot</span>
+      </a>
+      <a class="summary-card" href="Recursos/Resumenes/Lifecycle%20Autopilot.png" target="_blank" rel="noopener">
+        <img class="summary-thumb" src="Recursos/Resumenes/Lifecycle%20Autopilot.png" alt="Resumen visual de Lifecycle Autopilot" loading="lazy">
+        <span class="summary-label">Lifecycle Autopilot</span>
+      </a>
+      <a class="summary-card" href="Recursos/Resumenes/Cotizador_IA.png" target="_blank" rel="noopener">
+        <img class="summary-thumb" src="Recursos/Resumenes/Cotizador_IA.png" alt="Resumen visual de Cotizador IA Vehículos Pesados" loading="lazy">
+        <span class="summary-label">Cotizador IA · Vehículos Pesados</span>
+      </a>
     </div>
   </div>
 </main>
